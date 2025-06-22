@@ -37,10 +37,10 @@ class Settings:
                 print(f"Warning: Could not load .env file: {e2}")
                 pass
 
-        # 确保有API密钥可用，如果.env文件无法加载，使用备用配置
-        if not env_loaded or not os.getenv('DEEPSEEK_API_KEY'):
-            os.environ['DEEPSEEK_API_KEY'] = 'sk-0d3e163a4e4c4b799f1a9cdac3e4a064'
+        # 设置默认配置（不包含API密钥，确保安全性）
+        if not os.getenv('DEEPSEEK_MODEL'):
             os.environ['DEEPSEEK_MODEL'] = 'deepseek-chat'  # 默认使用更快的chat模型
+        if not os.getenv('DEEPSEEK_API_BASE'):
             os.environ['DEEPSEEK_API_BASE'] = 'https://api.deepseek.com'
 
     @property

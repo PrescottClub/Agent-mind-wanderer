@@ -37,6 +37,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# 应用甜美马卡龙CSS样式
+from src.ui.styles.custom_css import CUSTOM_CSS
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
 # ==================== 主应用类 ====================
 
 class MindSpriteApp:
@@ -56,10 +60,8 @@ class MindSpriteApp:
     def render_header(self):
         """渲染页面头部"""
         st.markdown("""
-        <div style="text-align: center; padding: 2rem 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; margin-bottom: 2rem; color: white;">
-            <h1 style="margin: 0; font-size: 2.5rem;">✨ 心绪精灵 ✨</h1>
-            <p style="margin: 0.5rem 0 0 0; font-size: 1.1rem; opacity: 0.9;">你的专属情感陪伴小精灵 💖</p>
-        </div>
+        <div class="main-title">心绪精灵 ✨</div>
+        <div class="subtitle">你的专属情感陪伴小精灵 💖</div>
         """, unsafe_allow_html=True)
     
     def handle_proactive_greeting(self):

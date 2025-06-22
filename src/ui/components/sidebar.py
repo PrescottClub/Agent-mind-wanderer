@@ -345,6 +345,12 @@ def render_session_management():
     with col_b:
         if st.button("📋 复制会话链接", type="secondary", use_container_width=True):
             session_id = st.session_state.get('session_id', 'unknown')
-            current_url = f"http://localhost:8507/?session_id={session_id}"
+            # 动态获取当前URL，避免硬编码端口
+            try:
+                import streamlit.web.server.server as server
+                port = server.get_current_server_config().port
+                current_url = f"http://localhost:{port}/?session_id={session_id}"
+            except:
+                current_url = f"http://localhost:8501/?session_id={session_id}"
             st.info(f"🔗 会话链接: {current_url}")
             st.info("💡 保存此链接可以在任何时候回到这个对话！")

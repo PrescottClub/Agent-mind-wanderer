@@ -82,7 +82,14 @@ class SessionManager:
     
     def get_current_session_url(self) -> str:
         """获取当前会话的URL"""
-        return f"http://localhost:8507/?session_id={self.session_id}"
+        # 动态获取当前URL，避免硬编码
+        try:
+            import streamlit.web.server.server as server
+            port = server.get_current_server_config().port
+            return f"http://localhost:{port}/?session_id={self.session_id}"
+        except:
+            # 如果无法获取端口，使用默认端口
+            return f"http://localhost:8501/?session_id={self.session_id}"
     
     def is_api_key_configured(self) -> bool:
         """检查API密钥是否已配置"""
