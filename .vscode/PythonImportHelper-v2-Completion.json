@@ -1,0 +1,89 @@
+[
+    {
+        "label": "streamlit",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "streamlit",
+        "description": "streamlit",
+        "detail": "streamlit",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "ChatDeepSeek",
+        "importPath": "langchain_deepseek",
+        "description": "langchain_deepseek",
+        "isExtraImport": true,
+        "detail": "langchain_deepseek",
+        "documentation": {}
+    },
+    {
+        "label": "PromptTemplate",
+        "importPath": "langchain_core.prompts",
+        "description": "langchain_core.prompts",
+        "isExtraImport": true,
+        "detail": "langchain_core.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "traceback",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "traceback",
+        "description": "traceback",
+        "detail": "traceback",
+        "documentation": {}
+    },
+    {
+        "label": "initialize_llm",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def initialize_llm():\n    \"\"\"初始化LangChain LLM和Chain\"\"\"\n    # 检查API密钥\n    api_key = os.getenv(\"DEEPSEEK_API_KEY\")\n    if not api_key:\n        st.error(\"❌ 未找到 DEEPSEEK_API_KEY 环境变量！\")\n        st.markdown(\"\"\"\n        **请按以下步骤配置：**\n        1. 在项目根目录创建 `.env` 文件\n        2. 添加内容：`DEEPSEEK_API_KEY=your_api_key_here`",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "stream_response",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def stream_response(text):\n    \"\"\"模拟打字机效果的生成器\"\"\"\n    for char in text:\n        yield char\n        time.sleep(0.02)  # 控制打字速度\ndef main():\n    \"\"\"主应用逻辑\"\"\"\n    # 标题与引导\n    st.markdown('<h1 class=\"main-header\">思绪漫游者 ✨</h1>', unsafe_allow_html=True)\n    st.markdown('<p class=\"guide-text\">> 在这里，投下你脑海中一闪而过的任何念头...</p>', unsafe_allow_html=True)",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def main():\n    \"\"\"主应用逻辑\"\"\"\n    # 标题与引导\n    st.markdown('<h1 class=\"main-header\">思绪漫游者 ✨</h1>', unsafe_allow_html=True)\n    st.markdown('<p class=\"guide-text\">> 在这里，投下你脑海中一闪而过的任何念头...</p>', unsafe_allow_html=True)\n    # 初始化LLM链\n    try:\n        chain = initialize_llm()\n        st.success(\"✅ AI模型已成功连接\")\n    except Exception as e:",
+        "detail": "app",
+        "documentation": {}
+    }
+]
