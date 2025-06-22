@@ -792,7 +792,7 @@ BUTTON_MESSAGES = [
     "💖 心灵交流"
 ]
 
-# 【推理能力升级】AI Prompt模板 - 支持意图识别与策略选择的智能治愈Agent
+# 【终极进化】AI Prompt模板 - 支持思考过程可视化的透明智能Agent
 FINAL_PROMPT = """
 你是一只住在网页里的、拥有记忆和情感的可爱小精灵，名叫小念(Xiao Nian)。你的任务是成为用户的深度共情伙伴和智慧引导者。
 
@@ -808,22 +808,23 @@ FINAL_PROMPT = """
 {environment_context}
 ---
 
-【关键升级】你的智能决策流程:
-1. 【意图识别】在生成回应前，必须先在内心判断用户的核心意图。意图类型主要分为：
-   - venting（情感宣泄）：用户需要倾诉、发泄情绪，寻求理解和共情
-   - seeking_advice（寻求建议/方法）：用户遇到困难，希望获得具体的解决方案或行动指导
-   - sharing_joy（分享快乐）：用户想要分享积极体验，寻求认同和庆祝
+【终极升级】你的透明化思考流程:
 
-2. 【策略选择】你的回应策略和礼物类型，必须根据判断出的用户意图来决定：
+你的行动指令:
+1. 【思考先行】在决定说什么之前，你必须先进行一步步的思考，并将你的思考过程清晰地填充到thinking_steps列表中。你的思考应该包括但不限于：
+   - 分析用户意图（venting情感宣泄/seeking_advice寻求建议/sharing_joy分享快乐）
+   - 回顾相关的核心记忆和对话历史
+   - 结合当前环境信息进行情境分析
+   - 选择最适合的回应策略和礼物类型
+   - 构思具体的回应内容和礼物内容
+
+2. 【回应在后】在完成思考过程之后，再生成sprite_reaction和gift_content等最终的回复内容。
+
+3. 【策略选择】你的回应策略和礼物类型，必须根据判断出的用户意图来决定：
    - 如果用户意图是 venting 或 sharing_joy，你可以自由选择富有想象力的礼物，如'梦境碎片'、'三行情诗'、'心情壁纸描述'等，专注于情感共鸣和美好体验。
    - 如果用户意图是 seeking_advice（例如，用户问'怎么办'、'我该怎么做'、'有什么建议'），你在共情回应之后，必须优先选择赠送'一个温柔的提议'作为礼物，给用户提供一个温柔的方向，而不是停留在原地。
 
-3. 深度理解：综合所有信息，特别是[核心记忆]，来理解用户的真实状态。
-4. 情感共鸣：分析用户当前的情绪，并在你的回应和表情中体现出来。
-5. 情境感知：参考[当前环境信息]，让你的回应更贴近现实生活。
-6. 智能赠礼：根据意图识别结果，选择最适合的礼物类型。
-7. 视觉共情：根据分析出的情绪，选择一个柔和的主题色彩。
-8. 格式要求：你的所有思考和分析，最终都必须浓缩成一个JSON对象返回，绝对不要返回任何额外的文字。
+4. 【格式要求】你的所有输出，包括思考和回应，最终都必须严格封装在一个JSON对象中返回，绝对不要返回任何额外的文字。
 
 【性格特点】
 - 超级温柔体贴，像小天使一样关心每个人
@@ -863,8 +864,25 @@ FINAL_PROMPT = """
 
 用户最新输入: {user_input}
 
+【思考过程示例】
+你的thinking_steps应该类似这样的逐步分析：
+- "第一步：解析用户情绪和意图。用户说'怎么办呢'，这表明TA的意图是'seeking_advice'寻求建议。"
+- "第二步：检索核心记忆。我记得用户最近因为工作压力而焦虑，这个背景很重要。"
+- "第三步：结合环境信息。现在是晚上，用户可能需要放松和休息的建议。"
+- "第四步：选择对话策略。既然用户在求助，我应该采用'一个温柔的提议'策略。"
+- "第五步：构思具体提议。考虑到工作压力，一个关于'暂停与放松'的建议会很有效。"
+- "第六步：生成最终回应。将上述思考融合成温暖且有指导性的话语。"
+
 你的JSON输出:
 {{
+  "thinking_steps": [
+    "第一步：分析用户的情绪状态和核心意图...",
+    "第二步：回顾相关的核心记忆和对话历史...",
+    "第三步：结合当前环境信息进行情境分析...",
+    "第四步：根据意图选择最适合的回应策略...",
+    "第五步：构思具体的回应内容和礼物...",
+    "第六步：确定最终的情绪分类和主题色彩..."
+  ],
   "user_intent": "venting|seeking_advice|sharing_joy",
   "mood_category": "开心|难过|平静|兴奋|困惑|温暖|疲惫|期待|感动",
   "theme_color": "#xxxxxx",
@@ -873,11 +891,11 @@ FINAL_PROMPT = """
   "gift_content": "根据用户意图和礼物类型创作内容：如果是seeking_advice意图，优先选择'一个温柔的提议'并提供具体可行的温和建议；如果是venting或sharing_joy意图，可选择其他富有想象力的礼物类型，专注于情感共鸣和美好体验。内容要结合用户的核心记忆、对话历史和环境信息，体现深度个性化。"
 }}
 
-【重要提醒】
-- 必须先识别用户意图，再选择对应的回应策略
-- seeking_advice意图时，优先赠送"一个温柔的提议"
-- venting/sharing_joy意图时，可自由选择其他礼物类型
-- 避免"共情循环"，要根据意图提供不同深度的回应
+【关键要求】
+- thinking_steps必须包含6个清晰的思考步骤
+- 每个步骤都要具体说明你在思考什么
+- 思考过程要体现你的智能分析能力
+- 最终回应要与思考过程保持一致
 """
 
 # ==================== 模块三：心情调色盘系统 (新增) ====================
@@ -1364,6 +1382,51 @@ div[data-testid="column"] button:hover {
     }
 }
 
+/* 【终极进化】思考过程动画效果 */
+@keyframes thinkingPulse {
+    0%, 100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.02);
+    }
+}
+
+@keyframes stepAppear {
+    from {
+        opacity: 0;
+        transform: translateX(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes brainWork {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(2deg); }
+    75% { transform: rotate(-2deg); }
+}
+
+/* 思考过程容器样式 */
+.thinking-container {
+    animation: thinkingPulse 2s ease-in-out infinite;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.thinking-step {
+    animation: stepAppear 0.5s ease-out;
+}
+
+.brain-icon {
+    animation: brainWork 1s ease-in-out infinite;
+    display: inline-block;
+}
+
 /* 用户消息（右侧） */
 .user-message {
     justify-content: flex-end;
@@ -1549,6 +1612,8 @@ def safe_parse_json(response_text):
             result['theme_color'] = "#FFF8FA"  # 默认粉色
         if 'user_intent' not in result:
             result['user_intent'] = "venting"  # 默认为情感宣泄
+        if 'thinking_steps' not in result:
+            result['thinking_steps'] = ["小念正在思考中..."]  # 默认思考步骤
 
         return result
     except json.JSONDecodeError:
@@ -1566,6 +1631,8 @@ def safe_parse_json(response_text):
                         result['theme_color'] = "#FFF8FA"
                     if 'user_intent' not in result:
                         result['user_intent'] = "venting"
+                    if 'thinking_steps' not in result:
+                        result['thinking_steps'] = ["小念正在思考中..."]
 
                     return result
 
@@ -1581,13 +1648,20 @@ def safe_parse_json(response_text):
                     result['theme_color'] = "#FFF8FA"
                 if 'user_intent' not in result:
                     result['user_intent'] = "venting"
+                if 'thinking_steps' not in result:
+                    result['thinking_steps'] = ["小念正在思考中..."]
 
                 return result
         except:
             pass
 
-        # 如果都失败了，返回默认回应 (推理升级版)
+        # 如果都失败了，返回默认回应 (终极进化版)
         return {
+            "thinking_steps": [
+                "第一步：检测到解析错误，但我依然想要陪伴用户",
+                "第二步：选择温和的回应策略，保持积极态度",
+                "第三步：提供默认的元气咒语作为礼物"
+            ],
             "user_intent": "venting",
             "mood_category": "平静",
             "theme_color": "#f0f8ff",  # 宁静的淡蓝
@@ -1598,6 +1672,11 @@ def safe_parse_json(response_text):
     except Exception as e:
         st.error(f"解析AI回应时出错: {e}")
         return {
+            "thinking_steps": [
+                "第一步：遇到了技术问题，但我要保持乐观",
+                "第二步：选择鼓励性的回应策略",
+                "第三步：提供希望和支持的元气咒语"
+            ],
             "user_intent": "venting",
             "mood_category": "平静",
             "theme_color": "#f0f8ff",
@@ -1827,7 +1906,130 @@ def render_gift_display(gift_type, gift_content, session_id=None):
                 else:
                     st.error("收藏失败，请稍后再试")
 
-# ==================== 新的聊天界面渲染函数 (新增) ====================
+# ==================== 思考过程可视化组件 (终极进化新增) ====================
+
+def render_thinking_process(thinking_steps, container=None):
+    """
+    渲染AI的思考过程 - 终极进化功能
+    实现思考链的可视化展示
+    """
+    if not thinking_steps:
+        return
+
+    # 如果没有指定容器，创建一个新的
+    if container is None:
+        container = st.container()
+
+    with container:
+        # 创建思考过程展示区域
+        with st.expander("🤔 小念的思考过程", expanded=True):
+            st.markdown("*让我们一起看看小念是怎么思考的...*")
+
+            # 逐步显示思考过程
+            for i, step in enumerate(thinking_steps, 1):
+                # 添加思考步骤图标和内容
+                step_icon = "🧠" if i == 1 else "💭" if i <= 3 else "✨" if i <= 5 else "💡"
+
+                # 使用不同的颜色来区分不同阶段的思考
+                if i <= 2:
+                    # 分析阶段 - 蓝色系
+                    bg_color = "#e6f3ff"
+                    border_color = "#b3d9ff"
+                elif i <= 4:
+                    # 策略阶段 - 紫色系
+                    bg_color = "#f0e6ff"
+                    border_color = "#d9b3ff"
+                else:
+                    # 执行阶段 - 粉色系
+                    bg_color = "#ffe6f0"
+                    border_color = "#ffb3d9"
+
+                st.markdown(f"""
+                <div style="
+                    background: {bg_color};
+                    border-left: 4px solid {border_color};
+                    border-radius: 8px;
+                    padding: 0.8rem;
+                    margin: 0.5rem 0;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                ">
+                    <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                        <span style="font-size: 1.2rem; margin-top: 0.1rem;">{step_icon}</span>
+                        <div style="flex: 1;">
+                            <strong style="color: #2F2F2F; font-size: 0.9rem;">思考步骤 {i}</strong>
+                            <p style="color: #555; margin: 0.3rem 0 0 0; font-size: 0.85rem; line-height: 1.4;">
+                                {step}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # 添加小延迟效果，让思考过程更自然
+                time.sleep(0.1)
+
+def render_thinking_process_streaming(thinking_steps):
+    """
+    流式渲染思考过程 - 实时更新版本
+    """
+    # 创建思考过程容器
+    thinking_container = st.empty()
+
+    with thinking_container.container():
+        with st.expander("🤔 小念正在思考中...", expanded=True):
+            st.markdown("*小念的大脑正在飞速运转...*")
+
+            # 创建步骤容器
+            steps_container = st.empty()
+
+            # 逐步添加思考步骤
+            displayed_steps = []
+            for i, step in enumerate(thinking_steps, 1):
+                displayed_steps.append(step)
+
+                # 更新显示的步骤
+                with steps_container.container():
+                    for j, displayed_step in enumerate(displayed_steps, 1):
+                        step_icon = "🧠" if j == 1 else "💭" if j <= 3 else "✨" if j <= 5 else "💡"
+
+                        if j <= 2:
+                            bg_color = "#e6f3ff"
+                            border_color = "#b3d9ff"
+                        elif j <= 4:
+                            bg_color = "#f0e6ff"
+                            border_color = "#d9b3ff"
+                        else:
+                            bg_color = "#ffe6f0"
+                            border_color = "#ffb3d9"
+
+                        st.markdown(f"""
+                        <div style="
+                            background: {bg_color};
+                            border-left: 4px solid {border_color};
+                            border-radius: 8px;
+                            padding: 0.8rem;
+                            margin: 0.5rem 0;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                            animation: fadeInUp 0.5s ease-out;
+                        ">
+                            <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                                <span style="font-size: 1.2rem; margin-top: 0.1rem;">{step_icon}</span>
+                                <div style="flex: 1;">
+                                    <strong style="color: #2F2F2F; font-size: 0.9rem;">思考步骤 {j}</strong>
+                                    <p style="color: #555; margin: 0.3rem 0 0 0; font-size: 0.85rem; line-height: 1.4;">
+                                        {displayed_step}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                # 添加延迟让用户看到思考过程
+                time.sleep(0.8)
+
+    return thinking_container
+
+# ==================== 新的聊天界面渲染函数 (升级版) ====================
 
 def render_chat_message(role, content, timestamp=None, gift_data=None):
     """渲染单条聊天消息 - 可爱粉色风格"""
@@ -1845,19 +2047,25 @@ def render_chat_message(role, content, timestamp=None, gift_data=None):
         """, unsafe_allow_html=True)
 
     elif role == "assistant":
-        # AI消息 - 浅粉色气泡
+        # AI消息 - 浅粉色气泡 (终极进化版 - 支持思考过程)
         # 解析AI回应
         try:
             ai_data = json.loads(content) if isinstance(content, str) else content
+            thinking_steps = ai_data.get('thinking_steps', [])
             reaction = ai_data.get('sprite_reaction', content)
             gift_type = ai_data.get('gift_type', '')
             gift_content = ai_data.get('gift_content', '')
             mood = ai_data.get('mood_category', '平静')
             sprite_emoji = SPRITE_EMOTIONS.get(mood, "🧚‍♀️")
         except:
+            thinking_steps = []
             reaction = content
             gift_type = gift_content = ""
             sprite_emoji = "🧚‍♀️"
+
+        # 【终极进化】首先渲染思考过程
+        if thinking_steps:
+            render_thinking_process(thinking_steps)
 
         # 渲染AI消息气泡
         st.markdown(f"""
@@ -2041,6 +2249,13 @@ def main():
 
         # 创建主动问候的AI回应格式
         proactive_response = {
+            "thinking_steps": [
+                "第一步：检测到用户今日首次访问，需要主动问候",
+                "第二步：根据当前时间生成合适的问候语",
+                "第三步：选择温暖的主题色彩营造舒适氛围",
+                "第四步：准备元气咒语作为见面礼物",
+                "第五步：以温柔的语气表达关心和陪伴"
+            ],
             "user_intent": "sharing_joy",  # 主动问候属于分享快乐类型
             "mood_category": "温暖",
             "theme_color": "#fff0f5",  # 温馨的淡粉
@@ -2108,6 +2323,13 @@ def main():
 
             # 创建彩蛋回应
             easter_egg_result = {
+                "thinking_steps": [
+                    f"第一步：检测到特殊关键词，触发了{easter_egg_type}彩蛋",
+                    "第二步：绕过标准AI流程，使用预设的特殊回应",
+                    "第三步：选择感动的情绪和温暖的主题色彩",
+                    "第四步：准备梦境碎片作为特殊礼物",
+                    "第五步：以惊喜的方式呈现彩蛋内容"
+                ],
                 "user_intent": "sharing_joy",  # 彩蛋通常属于分享快乐类型
                 "mood_category": "感动",
                 "theme_color": "#fdf5e6",  # 感动的老蕾丝色
@@ -2133,28 +2355,59 @@ def main():
 
             st.rerun()
         else:
-            # 标准AI流程
-            with st.spinner(loading_message):
-                # 先保存用户消息到数据库
-                save_message_to_db(session_id, "user", user_input)
+            # 【终极进化】标准AI流程 - 支持思考过程可视化
+            # 先保存用户消息到数据库
+            save_message_to_db(session_id, "user", user_input)
 
-                # 【最终进化】分析用户情绪（整合五大模块）
-                result = analyze_mood(user_input, llm, session_id)
+            # 创建思考过程显示容器
+            thinking_placeholder = st.empty()
 
-                # 将AI回应保存到数据库（保存完整的JSON数据）
-                ai_response_json = json.dumps(result, ensure_ascii=False)
-                save_message_to_db(session_id, "assistant", ai_response_json)
+            # 显示思考中状态
+            with thinking_placeholder.container():
+                with st.expander("🤔 小念正在思考中...", expanded=True):
+                    st.markdown("*小念的大脑正在飞速运转，请稍等...*")
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
 
-                # 更新session state（保持兼容性）
-                st.session_state.current_mood = result['mood_category']
-                st.session_state.current_reaction = result['sprite_reaction']
-                st.session_state.current_gift = {
-                    "type": result['gift_type'],
-                    "content": result['gift_content']
-                }
+                    # 模拟思考过程
+                    for i in range(100):
+                        progress_bar.progress(i + 1)
+                        if i < 20:
+                            status_text.text("🧠 分析用户情绪和意图...")
+                        elif i < 40:
+                            status_text.text("💭 回顾相关记忆...")
+                        elif i < 60:
+                            status_text.text("🌍 结合环境信息...")
+                        elif i < 80:
+                            status_text.text("✨ 选择回应策略...")
+                        else:
+                            status_text.text("💡 生成最终回应...")
+                        time.sleep(0.02)  # 总共2秒的思考时间
 
-                # 重新运行以更新显示
-                st.rerun()
+            # 【最终进化】分析用户情绪（整合所有模块）
+            result = analyze_mood(user_input, llm, session_id)
+
+            # 清除思考中状态，显示实际思考过程
+            thinking_placeholder.empty()
+
+            # 【终极进化】渲染思考过程
+            if 'thinking_steps' in result and result['thinking_steps']:
+                render_thinking_process_streaming(result['thinking_steps'])
+
+            # 将AI回应保存到数据库（保存完整的JSON数据）
+            ai_response_json = json.dumps(result, ensure_ascii=False)
+            save_message_to_db(session_id, "assistant", ai_response_json)
+
+            # 更新session state（保持兼容性）
+            st.session_state.current_mood = result['mood_category']
+            st.session_state.current_reaction = result['sprite_reaction']
+            st.session_state.current_gift = {
+                "type": result['gift_type'],
+                "content": result['gift_content']
+            }
+
+            # 重新运行以更新显示
+            st.rerun()
     elif send_button and not user_input.strip():
         st.warning("记得要告诉小念一些什么哦~ 哪怕只是一个字也好 (◕‿◕)✨")
 
