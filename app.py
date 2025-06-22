@@ -108,31 +108,21 @@ MIND_SPRITE_PROMPT = """
 # 自定义CSS样式
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@300;400;500;700&display=swap');
-
 /* 隐藏Streamlit默认元素 */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
+.stDeployButton {visibility: hidden;}
 
 /* 全局字体和背景 */
 .stApp {
-    background: linear-gradient(45deg, #FFF0F5 0%, #F0F8FF 50%, #FFF0F5 100%);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
-    font-family: 'M PLUS Rounded 1c', sans-serif;
+    background-color: #FFF0F5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     color: #2F2F2F;
-    position: relative;
-}
-
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
 }
 
 * {
-    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
     color: #2F2F2F !important;
 }
 
@@ -184,9 +174,8 @@ header {visibility: hidden;}
 }
 
 .sprite-emoji {
-    font-size: clamp(3rem, 8vw, 6rem);
+    font-size: 4rem;
     margin-bottom: 1rem;
-    animation: float 3s ease-in-out infinite;
 }
 
 @keyframes float {
@@ -251,7 +240,7 @@ header {visibility: hidden;}
     background-color: #FFE4E1 !important;
     border: 2px solid #E6E6FA !important;
     border-radius: 15px !important;
-    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
     font-size: 1.1rem !important;
     color: #2F2F2F !important;
     padding: 1rem !important;
@@ -546,16 +535,16 @@ def main():
     # 初始化session state
     if 'mood_history' not in st.session_state:
         st.session_state.mood_history = []
-    
+
     if 'current_mood' not in st.session_state:
         st.session_state.current_mood = "平静"
-    
+
     if 'current_reaction' not in st.session_state:
         st.session_state.current_reaction = ""
-    
+
     if 'current_gift' not in st.session_state:
         st.session_state.current_gift = {"type": "", "content": ""}
-    
+
     # 页面标题
     st.markdown("""
     <div class="main-title">心绪精灵 ✨</div>
@@ -563,7 +552,12 @@ def main():
     """, unsafe_allow_html=True)
     
     # 初始化LLM
-    llm = initialize_llm()
+    try:
+        llm = initialize_llm()
+        st.success("✅ AI模型初始化成功")
+    except Exception as e:
+        st.error(f"❌ AI模型初始化失败: {e}")
+        llm = None
     
     # 主要布局
     col1, col2 = st.columns([1, 1])
