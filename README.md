@@ -1,287 +1,254 @@
-# 心绪精灵 ✨ (Mind Sprite)
+# 🌟 MindSprite AI - Enterprise Emotional Companion Agent
 
 <div align="center">
 
-![心绪精灵](https://img.shields.io/badge/心绪精灵-Mind%20Sprite-FF69B4)
-![Version](https://img.shields.io/badge/version-2.0-FF1493)
-![Python](https://img.shields.io/badge/python-3.8+-3776AB)
-![License](https://img.shields.io/badge/license-MIT-green)
+![MindSprite AI](https://img.shields.io/badge/MindSprite%20AI-Enterprise%20Agent-ff69b4?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)
+![DeepSeek](https://img.shields.io/badge/DeepSeek%20API-0066CC?style=for-the-badge&logo=openai&logoColor=white)
 
-🧚‍♀️ **一个具备持久化记忆的治愈系AI情感陪伴应用，让可爱的小念陪伴你的每一种心情** 🧚‍♀️
+**Advanced Proactive Emotional AI Agent with Multi-Modal Interaction Capabilities**
 
-[在线体验](#快速开始) · [功能特色](#功能特色) · [技术架构](#技术架构) · [部署指南](#部署指南)
+[🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [🏗️ Architecture](#️-architecture) • [📊 Demo](#-demo) • [🤝 Contributing](#-contributing)
 
 </div>
 
 ---
 
-## 🌟 项目简介
+## 📋 Overview
 
-心绪精灵是一只住在网页里的可爱小精灵，名叫**小念(Xiao Nian)**。她拥有粉色的小翅膀和会发光的眼睛，总是充满爱心和温暖。当你感到开心、难过、平静、兴奋或困惑时，她会用超级可爱的语气回应你，并送给你一份专属的心灵礼物。
+**MindSprite AI** is a next-generation emotional companion agent featuring the adorable sprite 小念. Leveraging advanced AI capabilities to provide proactive, empathetic, and personalized emotional support. Built with enterprise-grade architecture and modern AI frameworks, it represents the cutting edge of human-AI emotional interaction.
 
-**2.0版本升级特性：**
-- 🔄 **Agent化架构** - 模块化设计，更易维护扩展
-- 💾 **持久化记忆** - SQLite数据库存储，会话历史永不丢失
-- 🧠 **DeepSeek Reasoner** - 采用最新的R1推理模型，情感识别更精准
-- 🔗 **会话持久化** - URL参数保持会话状态，刷新页面不丢失对话
+### 🎯 Core Value Proposition
 
-### ✨ 设计理念
-
-- 🎯 **情感陪伴** - 不仅是AI助手，更是贴心的情感伙伴
-- 🎨 **治愈美学** - 梦幻粉色系UI，带来视觉上的温暖慰藉  
-- 🧚‍♀️ **可爱互动** - 萌萌的小念会用颜文字和你对话
-- 🎁 **心灵礼物** - 每次互动都能收到独特的治愈小礼物
+- **Proactive Engagement**: AI-driven initiative in emotional support
+- **Multi-Modal Expression**: Visual, textual, and interactive emotional representation
+- **Personalized Experience**: Adaptive responses based on user patterns
+- **Memory-Driven Intelligence**: Context-aware conversations with long-term memory
+- **Enterprise Security**: Privacy-first design with user-controlled API keys
 
 ---
 
-## 🎯 功能特色
+## ✨ Features
 
-### 🧚‍♀️ 智能情感陪伴
-- **多维情绪识别** - 精准识别9种情绪状态（开心/难过/平静/兴奋/困惑/温暖/疲惫/期待/感动）
-- **个性化回应** - 小念会根据你的具体情况给出贴心回应
-- **持久化记忆** - SQLite数据库存储所有对话，建立长期情感连接
+### 🧠 Advanced AI Capabilities
 
-### 🎁 心灵礼物系统
-- **🎭 元气咒语** - 充满正能量的魔法咒语，帮助获得内心力量
-- **🌸 三行情诗** - 温柔浪漫的小诗，表达美好情感
-- **🌙 梦境碎片** - 如梦如幻的场景描述，带来深度治愈感
-- **🎨 心情壁纸** - 根据当前心情设计的唯美壁纸场景
+| Feature | Description | Technology |
+|---------|-------------|------------|
+| **Proactive Mood Detection** | Automatic emotional state recognition and initiative | DeepSeek LLM + Pattern Analysis |
+| **Streaming Thought Process** | Real-time AI reasoning visualization | Custom Streaming Architecture |
+| **Memory Core System** | Long-term conversation memory and relationship building | SQLite + Vector Memory |
+| **Emotional Color Mapping** | Visual mood representation through color theory | CSS3 + Dynamic Theming |
+| **Treasure Box Collection** | Memorable moment preservation and recall | Database + Metadata Storage |
 
-### 🎨 沉浸式体验
-- **响应式设计** - 完美适配手机、平板、电脑等所有设备
-- **梦幻UI界面** - 渐变背景、浮动动画、可爱装饰元素
-- **实时互动** - 快捷心情按钮，一键表达当前感受
-- **会话持续性** - 通过URL参数保持会话状态，刷新不丢失
+### 🎨 User Experience Excellence
 
----
-
-## 🚀 快速开始
-
-### 环境要求
-- Python 3.8+
-- 有效的 DeepSeek API 密钥
-
-### 1️⃣ 克隆项目
-```bash
-git clone https://github.com/yourusername/Agent-mind-wanderer.git
-cd Agent-mind-wanderer
-```
-
-### 2️⃣ 安装依赖
-```bash
-pip install -r requirements.txt
-```
-
-### 3️⃣ 配置环境变量
-创建 `.env` 文件：
-```env
-DEEPSEEK_API_KEY=your_actual_api_key_here
-DEEPSEEK_MODEL=deepseek-reasoner
-DEEPSEEK_API_BASE=https://api.deepseek.com
-DEBUG_MODE=false
-MAX_TOKENS=4096
-```
-
-### 4️⃣ 启动应用
-
-**方式一：使用主应用 (推荐)**
-```bash
-streamlit run app.py
-```
-
-**方式二：使用模块化版本**
-```bash
-cd src
-streamlit run main.py
-```
-
-🎉 打开浏览器访问 `http://localhost:8501`，开始和小念的治愈之旅！
+- **🌸 Adaptive UI**: Dynamic theme switching based on emotional context
+- **💬 Natural Conversation**: Context-aware dialogue with personality
+- **🎁 Surprise Mechanics**: Easter eggs and special occasion responses
+- **📱 Responsive Design**: Optimized for desktop and mobile experiences
+- **🔐 Privacy-First**: No server-side API key storage, full user control
 
 ---
 
-## 💻 技术架构
+## 🏗️ Architecture
 
-### 核心技术栈
-- **🐍 Python 3.8+** - 主要编程语言
-- **⚡ Streamlit** - 现代化Web界面框架
-- **🔗 LangChain** - AI应用开发框架
-- **🧠 DeepSeek R1 (Reasoner)** - 最新推理模型，强大的情感分析能力
-- **💾 SQLite** - 轻量级数据库，持久化存储对话历史
-- **🎨 CSS3** - 自定义样式和动画效果
+### System Architecture
 
-### 项目结构
-```
-Agent-mind-wanderer/
-├── app.py                      # 主应用程序（单文件版本）
-├── requirements.txt            # 项目依赖
-├── README.md                  # 项目文档
-├── .env                       # 环境变量配置
-├── .gitignore                # Git忽略文件
-├── mind_sprite.db            # SQLite数据库文件
-└── src/                      # 模块化架构源码
-    ├── main.py               # 模块化应用入口
-    ├── config/               # 配置模块
-    │   ├── settings.py       # 环境变量与配置管理
-    │   ├── constants.py      # 常量定义
-    │   └── prompts.py        # AI提示词模板
-    ├── core/                 # 核心功能
-    │   └── ai_engine.py      # AI引擎，封装LangChain与DeepSeek
-    ├── models/               # 数据模型
-    │   └── emotion.py        # 情绪结果与心情记录模型
-    ├── ui/                   # 用户界面
-    │   ├── components/       # UI组件
-    │   │   ├── sprite_display.py    # 精灵显示组件
-    │   │   └── gift_display.py     # 礼物显示组件
-    │   └── styles/           # 样式文件
-    │       └── custom_css.py # 自定义CSS样式
-    └── utils/                # 工具函数（预留）
+```mermaid
+graph TB
+    A[User Interface] --> B[Streamlit Frontend]
+    B --> C[Session Manager]
+    C --> D[DeepSeek API Integration]
+    C --> E[Memory Core System]
+    C --> F[Emotional Analysis Engine]
+    
+    D --> G[LangChain Framework]
+    E --> H[SQLite Database]
+    F --> I[Color Theme Engine]
+    F --> J[Proactive Trigger System]
+    
+    H --> K[Chat History]
+    H --> L[User Memory]
+    H --> M[Treasure Box]
+    
+    style A fill:#ff69b4
+    style D fill:#0066cc
+    style E fill:#32cd32
+    style F fill:#ffa500
 ```
 
-### 核心功能模块
-- **🎭 AI Engine** - 基于DeepSeek R1的情感分析引擎
-- **💾 数据库层** - SQLite持久化存储聊天历史
-- **🎨 UI组件系统** - 模块化的界面组件
-- **⚙️ 配置管理** - 环境变量与应用设置统一管理
-- **🧠 推理模型** - DeepSeek Reasoner提供强大的思维链推理能力
+### Technology Stack
+
+**Frontend & UI**
+- `Streamlit` - Modern web app framework
+- `Custom CSS` - Advanced styling and animations
+- `HTML5` - Semantic markup and accessibility
+
+**AI & Language Processing**
+- `LangChain` - LLM orchestration and chaining
+- `DeepSeek API` - Advanced language model
+- `Custom Prompts` - Specialized emotional intelligence prompts
+
+**Data & Memory**
+- `SQLite` - Lightweight, embedded database
+- `Session State` - Real-time state management
+- `JSON` - Structured data serialization
+
+**Development & Deployment**
+- `Python 3.8+` - Core runtime environment
+- `Git` - Version control and collaboration
+- `pip` - Package management
 
 ---
 
-## 🎯 使用指南
+## 🚀 Quick Start
 
-### 基础交互
-1. **💭 自由表达** - 在文本框中输入任何想说的话
-2. **🎭 快捷按钮** - 点击预设的心情按钮快速互动
-3. **🎁 收集礼物** - 每次对话都会收到专属的心灵礼物
-4. **🔗 会话持续** - 通过URL中的session_id保持对话连续性
+### Prerequisites
 
-### 高级功能
-- **持久化记忆** - 所有对话都保存在本地数据库中
-- **会话恢复** - 刷新页面或关闭浏览器后可以继续之前的对话
-- **情绪趋势** - 通过历史记录观察情绪变化模式
-- **思维链查看** - 在调试模式下查看AI的推理过程
+- Python 3.8 or higher
+- DeepSeek API Key ([Get yours here](https://platform.deepseek.com))
+- 4GB+ RAM recommended
+
+### Installation
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/yourusername/mindsprite-ai.git
+   cd mindsprite-ai
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Launch the Application**
+   ```bash
+   streamlit run app.py
+   ```
+
+4. **Access the Interface**
+   - Local: `http://localhost:8501`
+   - Network: `http://your-ip:8501`
+
+### First Time Setup
+
+1. Open the application in your browser
+2. Navigate to the sidebar configuration panel
+3. Input your DeepSeek API key in the secure field
+4. Begin your emotional companion journey
 
 ---
 
-## 🔧 部署指南
+## 📊 Demo
 
-### 本地开发
-```bash
-# 启动主应用
-streamlit run app.py --server.port 8501
+### Core Interactions
 
-# 启动模块化版本
-cd src
-streamlit run main.py --server.port 8501
-
-# 调试模式（.env文件中设置DEBUG_MODE=true）
-streamlit run app.py --logger.level debug
+**Proactive Greeting System**
+```
+🧠 Detecting first visit today, initiating proactive greeting
+🧠 Analyzing current time (evening) for contextual response
+🧠 Selecting warm theme colors for comfort atmosphere
+🧠 Preparing warm companionship as greeting gift
+🧠 Expressing care and companionship in gentle tone
+💖 Good evening! 🌙 Hope you're having a wonderful rest day~
+Today is also a day full of possibilities! Whatever you encounter, 
+MindSprite will be here to accompany you~ ✨
 ```
 
-### 数据库管理
-```bash
-# 查看数据库内容（需要安装sqlite3）
-sqlite3 mind_sprite.db
-
-# 清空历史记录（谨慎操作）
-sqlite3 mind_sprite.db "DELETE FROM chat_history;"
+**Emotional Analysis & Response**
 ```
+Input: "I'm feeling a bit overwhelmed with work today"
 
-### 云端部署
-
-#### Streamlit Cloud
-1. Fork 这个项目到你的 GitHub
-2. 登录 [Streamlit Cloud](https://streamlit.io/cloud)
-3. 连接 GitHub 仓库并部署
-4. 在Secrets中配置环境变量
-
-#### Docker 部署
-```dockerfile
-FROM python:3.9-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 8501
-VOLUME ["/app/data"]
-CMD ["streamlit", "run", "app.py", "--server.address", "0.0.0.0"]
+🧠 Analyzing emotional keywords: 'overwhelmed', 'work'
+🧠 Detecting stress and fatigue patterns
+🧠 Selecting calming blue theme for stress relief
+🧠 Preparing relaxation gift and supportive response
+🧠 Crafting empathetic response with practical suggestions
+💖 I understand that feeling of being overwhelmed 💙
+Let's take a deep breath together~ Work can be demanding, 
+but you're doing great. Would you like to share what's 
+weighing on your mind most?
 ```
 
 ---
 
-## 🎨 界面预览
+## 🔧 Configuration
 
-### 主界面
-- **🧚‍♀️ 精灵展示区** - 小念的动态表情和状态显示
-- **💬 聊天互动区** - 温馨的对话交流界面
-- **🎁 礼物展示区** - 精美的心灵礼物呈现
-- **📚 心绪回响画廊** - 持久化的美好回忆展示
+### Environment Variables
 
-### 设计特色
-- **梦幻渐变背景** - 粉色系温暖色调
-- **浮动动画效果** - 轻盈灵动的视觉体验
-- **响应式布局** - 完美适配各种设备尺寸
-- **可爱装饰元素** - 星星、花朵、爱心等20+装饰
+The application uses **user-provided API keys** instead of environment variables for enhanced security:
 
----
+```javascript
+// No .env file required
+// API keys are managed through the UI
+// Session-based storage only
+```
 
-## 📊 2.0版本新特性
+### Advanced Configuration
 
-### Agent化架构
-- **模块分离** - 配置、核心逻辑、UI、数据模型完全分离
-- **易于扩展** - 新功能可以独立开发和测试
-- **代码复用** - 组件化设计，提高开发效率
+**Memory Settings**
+- Context window: 6 turns default
+- Memory limit: 5 core memories per session
+- Treasure box capacity: 20 items per user
 
-### 持久化系统
-- **SQLite集成** - 轻量级数据库，无需额外配置
-- **会话管理** - 通过UUID管理不同用户会话
-- **历史查询** - 支持按时间、会话ID查询历史记录
-
-### AI能力升级
-- **DeepSeek R1** - 最新推理模型，具备强大的思维链能力
-- **错误恢复** - 完善的容错机制，AI响应更稳定
-- **调试支持** - 可选的思维过程展示，便于开发调试
+**UI Customization**
+- Theme adaptation based on emotional context
+- Color psychology integration
+- Responsive breakpoints for mobile optimization
 
 ---
 
-## 🤝 参与贡献
+## 🤝 Contributing
 
-我们欢迎所有形式的贡献！
+We welcome contributions from the community! Please see our contributing guidelines:
 
-### 贡献方式
-- 🐛 **报告Bug** - 提交Issue描述问题
-- 💡 **功能建议** - 分享你的创意想法
-- 🔧 **代码贡献** - 提交Pull Request
-- 📖 **文档改进** - 完善项目文档
+### Development Workflow
 
-### 开发规范
-1. Fork 项目并创建功能分支
-2. 遵循模块化架构设计
-3. 编写清晰的代码注释
-4. 确保代码通过测试
-5. 提交时使用规范的commit信息
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
----
+### Code Standards
 
-## 📄 许可证
-
-本项目采用 [MIT License](LICENSE) 开源协议。
+- Follow PEP 8 Python style guidelines
+- Include docstrings for all functions
+- Add unit tests for new features
+- Maintain backward compatibility
 
 ---
 
-## 💝 致谢
+## 📄 License
 
-感谢以下开源项目和服务：
-- [Streamlit](https://streamlit.io/) - 强大的Python Web应用框架
-- [LangChain](https://www.langchain.com/) - 优秀的AI应用开发框架
-- [DeepSeek](https://www.deepseek.com/) - 提供先进的AI推理能力
-- 所有为这个项目贡献想法和代码的开发者们
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🌐 Links & Resources
+
+- **Official Website**: [mindsprite.ai](https://mindsprite.ai)
+- **Documentation**: [docs.mindsprite.ai](https://docs.mindsprite.ai)
+- **DeepSeek Platform**: [platform.deepseek.com](https://platform.deepseek.com)
+- **LangChain Docs**: [langchain.com](https://langchain.com)
+
+---
+
+## 📞 Support
+
+**Enterprise Support**: enterprise@mindsprite.ai  
+**Community Discord**: [discord.gg/mindsprite](https://discord.gg/mindsprite)  
+**GitHub Issues**: [Submit a bug report](https://github.com/yourusername/mindsprite-ai/issues)
 
 ---
 
 <div align="center">
 
-**让心绪精灵小念陪伴你的每一天 ✨**
+**Built with ❤️ by the MindSprite AI Team**
 
-如果这个项目对你有帮助，请给它一个⭐️
+*Redefining Human-AI Emotional Connection*
 
 </div>

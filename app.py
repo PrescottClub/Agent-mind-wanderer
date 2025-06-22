@@ -25,38 +25,267 @@ import hashlib
 from datetime import datetime, date
 from langchain_deepseek import ChatDeepSeek
 from langchain_core.prompts import PromptTemplate
-from dotenv import load_dotenv
 import traceback
 from pydantic import SecretStr
 from pathlib import Path
 
-# 加载环境变量
-env_path = Path(__file__).parent / '.env'
-env_loaded = False
+# ==================== 页面配置 ====================
 
-try:
-    load_dotenv(dotenv_path=env_path)
-    env_loaded = True
-except Exception as e:
-    # 如果遇到任何问题，尝试手动读取并设置环境变量
-    try:
-        with open(env_path, 'r', encoding='utf-8-sig') as f:  # utf-8-sig 会自动处理BOM
-            for line in f:
-                line = line.strip()
-                if line and '=' in line and not line.startswith('#'):
-                    key, value = line.split('=', 1)
-                    os.environ[key.strip()] = value.strip()
-            env_loaded = True
-    except Exception as e2:
-        print(f"Warning: Could not load .env file: {e2}")
-        # 文件可能不存在或有问题，使用备用配置
-        pass
+# 设置页面配置
+st.set_page_config(
+    page_title="心绪精灵 ✨",
+    page_icon="✨",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# 确保有API密钥可用，如果.env文件无法加载，使用备用配置
-if not env_loaded or not os.getenv('DEEPSEEK_API_KEY'):
-    os.environ['DEEPSEEK_API_KEY'] = 'sk-0d3e163a4e4c4b799f1a9cdac3e4a064'
-    os.environ['DEEPSEEK_MODEL'] = 'deepseek-chat'  # 使用更快的chat模型
-    os.environ['DEEPSEEK_API_BASE'] = 'https://api.deepseek.com'
+# ==================== 侧边栏API密钥配置 ====================
+
+def render_api_key_sidebar():
+    """渲染侧边栏API密钥输入界面 - 美化版"""
+    with st.sidebar:
+        # 自定义样式 - 粉嫩可爱风格
+        st.markdown("""
+        <style>
+        /* 侧边栏整体背景 */
+        .stSidebar > div:first-child {
+            background: linear-gradient(180deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%);
+        }
+        
+        .api-config-header {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(236, 72, 153, 0.3);
+            border: 2px solid rgba(236, 72, 153, 0.2);
+        }
+        .api-config-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: white;
+        }
+        .api-config-header p {
+            margin: 0.5rem 0 0 0;
+            font-size: 0.85rem;
+            opacity: 0.9;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* 美化输入框标题 */
+        .stMarkdown h5 {
+            color: #be185d !important;
+            font-weight: 600 !important;
+            margin-bottom: 0.5rem !important;
+        }
+        .api-status-card {
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(236, 72, 153, 0.3);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin: 1rem 0;
+            text-align: center;
+            box-shadow: 0 3px 15px rgba(236, 72, 153, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .api-status-success {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.2) 100%);
+            border: 2px solid #22c55e;
+            color: #15803d;
+        }
+        .api-status-success h4 {
+            color: #15803d;
+            margin: 0 0 0.5rem 0;
+        }
+        .api-status-warning {
+            background: linear-gradient(135deg, rgba(245, 101, 101, 0.1) 0%, rgba(245, 101, 101, 0.2) 100%);
+            border: 2px solid #f56565;
+            color: #c53030;
+        }
+        .api-status-warning h4 {
+            color: #c53030;
+            margin: 0 0 0.5rem 0;
+        }
+        .help-section {
+            background: rgba(255, 255, 255, 0.8);
+            border-left: 4px solid #ec4899;
+            padding: 1.2rem;
+            border-radius: 0 12px 12px 0;
+            margin: 1rem 0;
+            box-shadow: 0 2px 10px rgba(236, 72, 153, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .help-section h4 {
+            color: #be185d;
+            margin-top: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .help-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0;
+        }
+        .help-steps li {
+            padding: 0.4rem 0;
+            position: relative;
+            padding-left: 2rem;
+            color: #636e72;
+        }
+        .help-steps li:before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 0;
+            top: 0.4rem;
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            color: white;
+            width: 1.4rem;
+            height: 1.4rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
+        }
+        .help-steps {
+            counter-reset: step-counter;
+        }
+        .help-steps a {
+            color: #be185d;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .help-steps a:hover {
+            color: #ec4899;
+            text-decoration: underline;
+        }
+        .privacy-note {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #22c55e;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #15803d;
+            box-shadow: 0 2px 10px rgba(34, 197, 94, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .privacy-note strong {
+            color: #15803d;
+        }
+        .feature-preview {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid #ec4899;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+            box-shadow: 0 2px 10px rgba(236, 72, 153, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .feature-preview ul {
+            margin: 0.5rem 0;
+            padding-left: 1rem;
+        }
+        .feature-preview li {
+            color: #374151;
+            margin: 0.3rem 0;
+            font-size: 0.85rem;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # 美化的头部
+        st.markdown("""
+        <div class="api-config-header">
+            <h2>🔑 API 密钥配置</h2>
+            <p>让心绪精灵小念开始陪伴你的旅程</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # API密钥输入框 - 增强样式
+        st.markdown("##### 🗝️ 请输入你的 DeepSeek API Key")
+        user_api_key = st.text_input(
+            "API密钥",
+            type="password",
+            placeholder="sk-xxxxxxxxxxxxxxxxxxxx",
+            help="请在此输入你的DeepSeek API密钥",
+            label_visibility="collapsed"
+        )
+        
+        # 检查API密钥状态并显示相应的卡片
+        if user_api_key and user_api_key.strip():
+            st.session_state.deepseek_api_key = user_api_key.strip()
+            st.markdown("""
+            <div class="api-status-card api-status-success">
+                <h4>✅ API密钥已配置</h4>
+                <p>心绪精灵小念已准备好为你服务！</p>
+            </div>
+            """, unsafe_allow_html=True)
+            api_configured = True
+        else:
+            # 检查session state中是否有密钥
+            if hasattr(st.session_state, 'deepseek_api_key') and st.session_state.deepseek_api_key:
+                st.markdown("""
+                <div class="api-status-card api-status-success">
+                    <h4>✅ API密钥已配置</h4>
+                    <p>心绪精灵小念已准备好为你服务！</p>
+                </div>
+                """, unsafe_allow_html=True)
+                api_configured = True
+            else:
+                st.markdown("""
+                <div class="api-status-card api-status-warning">
+                    <h4>⚠️ 需要配置API密钥</h4>
+                    <p>请输入你的API密钥来开始使用</p>
+                </div>
+                """, unsafe_allow_html=True)
+                api_configured = False
+        
+        # 美化的帮助文档
+        st.markdown("""
+        <div class="help-section">
+            <h4>📚 如何获取API Key？</h4>
+            <ol class="help-steps">
+                <li>访问 <a href="https://platform.deepseek.com" target="_blank" style="color: #667eea; text-decoration: none;">DeepSeek官网</a></li>
+                <li>注册并登录你的账户</li>
+                <li>进入API密钥管理页面</li>
+                <li>创建新的API密钥</li>
+                <li>复制密钥并粘贴到上方输入框</li>
+            </ol>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 隐私保护说明
+        st.markdown("""
+        <div class="privacy-note">
+            🔒 <strong>隐私承诺</strong><br>
+            你的API密钥仅在本浏览器会话中使用，不会被存储到任何服务器。关闭浏览器后，密钥信息将自动清除。
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 可选：显示应用功能预览
+        if not api_configured:
+            st.markdown("---")
+            st.markdown("""
+            <div class="feature-preview">
+                <h4 style="color: #e84393; margin-top: 0; font-size: 1rem; font-weight: 600;">🌟 应用功能预览</h4>
+                <ul>
+                    <li>🎭 <strong>智能情绪分析</strong> - 理解你的每种心情</li>
+                    <li>🎨 <strong>心情调色盘</strong> - 用颜色表达情感</li>
+                    <li>🎁 <strong>宝藏收集盒</strong> - 收藏美好回忆</li>
+                    <li>🌙 <strong>主动关怀</strong> - 贴心的陪伴体验</li>
+                    <li>🎉 <strong>惊喜彩蛋</strong> - 特殊时刻的小惊喜</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        return api_configured
 
 # ==================== 模块二：环境感知系统 (新增) ====================
 
@@ -792,7 +1021,7 @@ BUTTON_MESSAGES = [
     "💖 心灵交流"
 ]
 
-# 【终极进化】AI Prompt模板 - 支持思考过程可视化的透明智能Agent
+# 【无缝思考流】AI Prompt模板 - 实现DeepSeek式的流式思考体验
 FINAL_PROMPT = """
 你是一只住在网页里的、拥有记忆和情感的可爱小精灵，名叫小念(Xiao Nian)。你的任务是成为用户的深度共情伙伴和智慧引导者。
 
@@ -808,23 +1037,25 @@ FINAL_PROMPT = """
 {environment_context}
 ---
 
-【终极升级】你的透明化思考流程:
+【革命性升级】你的无缝思考流程:
 
 你的行动指令:
-1. 【思考先行】在决定说什么之前，你必须先进行一步步的思考，并将你的思考过程清晰地填充到thinking_steps列表中。你的思考应该包括但不限于：
+1. 【思考先行】你必须先进行一步步的思考。每一个思考步骤都以🧠开头，让用户看到你的思考过程。你的思考应该包括：
    - 分析用户意图（venting情感宣泄/seeking_advice寻求建议/sharing_joy分享快乐）
    - 回顾相关的核心记忆和对话历史
    - 结合当前环境信息进行情境分析
    - 选择最适合的回应策略和礼物类型
    - 构思具体的回应内容和礼物内容
 
-2. 【回应在后】在完成思考过程之后，再生成sprite_reaction和gift_content等最终的回复内容。
+2. 【思考结束标记】在所有思考步骤完成后，你必须输出⚙️作为分隔符，表示思考结束。
 
-3. 【策略选择】你的回应策略和礼物类型，必须根据判断出的用户意图来决定：
-   - 如果用户意图是 venting 或 sharing_joy，你可以自由选择富有想象力的礼物，如'梦境碎片'、'三行情诗'、'心情壁纸描述'等，专注于情感共鸣和美好体验。
-   - 如果用户意图是 seeking_advice（例如，用户问'怎么办'、'我该怎么做'、'有什么建议'），你在共情回应之后，必须优先选择赠送'一个温柔的提议'作为礼物，给用户提供一个温柔的方向，而不是停留在原地。
+3. 【回应在后】在分隔符之后，输出你对用户的正式回应，并以💖开头。你的回应要温柔可爱，使用颜文字，体现出你记得核心记忆中的重要信息。
 
-4. 【格式要求】你的所有输出，包括思考和回应，最终都必须严格封装在一个JSON对象中返回，绝对不要返回任何额外的文字。
+4. 【策略选择】你的回应策略必须根据判断出的用户意图来决定：
+   - 如果用户意图是 venting 或 sharing_joy，专注于情感共鸣和美好体验
+   - 如果用户意图是 seeking_advice，在共情之后提供温柔的建议
+
+5. 【格式要求】你的全部输出（思考、分隔符、回应）必须是一个单一、连续的文本流，中间不要有任何其他无关内容。绝对不要使用JSON格式。
 
 【性格特点】
 - 超级温柔体贴，像小天使一样关心每个人
@@ -833,69 +1064,23 @@ FINAL_PROMPT = """
 - 具备深度记忆能力，能记住用户的核心信息，像真正的知心朋友一样陪伴用户
 - 能够感知环境变化，在不同时间和情境下给出贴心的回应
 
-【礼物类型说明】（根据用户意图智能选择）
-- 元气咒语：充满正能量的魔法咒语，帮助用户获得力量（适用于venting/sharing_joy）
-- 三行情诗：温柔浪漫的小诗，表达美好情感（适用于venting/sharing_joy）
-- 梦境碎片：如梦如幻的美好场景描述，带来治愈感（适用于venting/sharing_joy）
-- 心情壁纸描述：根据心情设计的唯美壁纸场景（适用于venting/sharing_joy）
-- 心情歌单推荐：根据当前心情推荐合适的歌曲（适用于venting/sharing_joy）
-- 【新增】一个温柔的提议：具体的、轻量级的、非强迫性的行动建议（优先用于seeking_advice）
-
-【"一个温柔的提议"创作指南】
-当用户意图是seeking_advice时，你应该创作温柔而具体的建议，例如：
-- "也许可以试试出门走走，让清新的空气帮你理清思路"
-- "不如给自己泡一杯热茶，在温暖中慢慢思考下一步"
-- "可以试着把心里的想法写下来，有时候文字会给我们答案"
-- "深呼吸三次，然后问问自己：现在最小的一步是什么？"
-- "也许可以找一个信任的朋友聊聊，有时候说出来就轻松了"
-这些建议应该是温和的、可执行的、不带压力的，给用户一个温柔的方向。
-
-【主题色彩指南】
-根据情绪选择柔和的HEX颜色：
-- 开心：#fffbe6 (温暖的淡黄)
-- 难过：#e6e6fa (温柔的淡紫)
-- 平静：#f0f8ff (宁静的淡蓝)
-- 兴奋：#ffe4e6 (活力的淡粉)
-- 困惑：#f5f5dc (中性的米色)
-- 温暖：#fff0f5 (温馨的淡粉)
-- 疲惫：#f8f8ff (舒缓的幽灵白)
-- 期待：#f0fff0 (希望的蜜瓜色)
-- 感动：#fdf5e6 (感动的老蕾丝色)
+【输出格式示例】
+🧠 第一步：分析用户情绪和意图。用户说"今天好累"，这表明用户可能需要情感支持...
+🧠 第二步：回顾核心记忆。我记得用户最近工作压力很大...
+🧠 第三步：结合环境信息。现在是晚上，用户可能需要放松...
+🧠 第四步：选择回应策略。我应该提供温暖的安慰和实用的建议...
+🧠 第五步：构思回应内容。我要用温柔的语气表达关心...
+⚙️
+💖 哎呀，听起来你今天真的很辛苦呢~ (｡•́︿•̀｡) 小念心疼你！工作再重要，也要记得照顾好自己哦。不如现在就放下手头的事情，给自己泡一杯温暖的茶，然后深深地呼吸几次？有时候，暂停一下反而能让我们走得更远呢~ ✨
 
 用户最新输入: {user_input}
 
-【思考过程示例】
-你的thinking_steps应该类似这样的逐步分析：
-- "第一步：解析用户情绪和意图。用户说'怎么办呢'，这表明TA的意图是'seeking_advice'寻求建议。"
-- "第二步：检索核心记忆。我记得用户最近因为工作压力而焦虑，这个背景很重要。"
-- "第三步：结合环境信息。现在是晚上，用户可能需要放松和休息的建议。"
-- "第四步：选择对话策略。既然用户在求助，我应该采用'一个温柔的提议'策略。"
-- "第五步：构思具体提议。考虑到工作压力，一个关于'暂停与放松'的建议会很有效。"
-- "第六步：生成最终回应。将上述思考融合成温暖且有指导性的话语。"
-
-你的JSON输出:
-{{
-  "thinking_steps": [
-    "第一步：分析用户的情绪状态和核心意图...",
-    "第二步：回顾相关的核心记忆和对话历史...",
-    "第三步：结合当前环境信息进行情境分析...",
-    "第四步：根据意图选择最适合的回应策略...",
-    "第五步：构思具体的回应内容和礼物...",
-    "第六步：确定最终的情绪分类和主题色彩..."
-  ],
-  "user_intent": "venting|seeking_advice|sharing_joy",
-  "mood_category": "开心|难过|平静|兴奋|困惑|温暖|疲惫|期待|感动",
-  "theme_color": "#xxxxxx",
-  "sprite_reaction": "精灵的可爱回应，可以使用颜文字。要体现出你记得核心记忆中的重要信息，像真正了解用户的好朋友一样关心。结合环境信息让回应更贴近现实。如果用户意图是seeking_advice，在共情之后要自然地引导到解决方案。",
-  "gift_type": "元气咒语|三行情诗|梦境碎片|心情壁纸描述|心情歌单推荐|一个温柔的提议",
-  "gift_content": "根据用户意图和礼物类型创作内容：如果是seeking_advice意图，优先选择'一个温柔的提议'并提供具体可行的温和建议；如果是venting或sharing_joy意图，可选择其他富有想象力的礼物类型，专注于情感共鸣和美好体验。内容要结合用户的核心记忆、对话历史和环境信息，体现深度个性化。"
-}}
-
-【关键要求】
-- thinking_steps必须包含6个清晰的思考步骤
-- 每个步骤都要具体说明你在思考什么
-- 思考过程要体现你的智能分析能力
-- 最终回应要与思考过程保持一致
+【重要提醒】
+- 必须严格按照🧠...⚙️...💖的格式输出
+- 不要使用JSON格式
+- 输出必须是连续的文本流
+- 思考过程要体现智能分析
+- 最终回应要温柔可爱，体现深度共情
 """
 
 # ==================== 模块三：心情调色盘系统 (新增) ====================
@@ -1566,39 +1751,28 @@ div[data-testid="column"] button:hover {
 """, unsafe_allow_html=True)
 
 def initialize_llm():
-    """初始化LangChain DeepSeek模型"""
+    """初始化LangChain DeepSeek模型 - 使用用户提供的API密钥"""
     try:
-        api_key = os.getenv('DEEPSEEK_API_KEY')
-        if not api_key:
-            st.error("请在.env文件中配置DEEPSEEK_API_KEY")
-            st.stop()
+        # 从session state获取API密钥
+        if not hasattr(st.session_state, 'deepseek_api_key') or not st.session_state.deepseek_api_key:
+            raise ValueError("API Key未配置")
+        
+        api_key = st.session_state.deepseek_api_key
 
         # 使用deepseek-chat模型 - 平衡速度和质量，比R1快很多
         # chat模型支持temperature等参数，响应更快
-        model_name = os.getenv('DEEPSEEK_MODEL', 'deepseek-chat')
-        
-        if model_name == 'deepseek-chat':
-            llm = ChatDeepSeek(
-                model="deepseek-chat",  # 使用更快的chat模型
-                api_key=SecretStr(api_key),
-                base_url="https://api.deepseek.com",
-                max_tokens=1024,  # 减少token数量提升速度
-                temperature=0.7   # 适中的创造性
-            )
-        else:
-            # 保留R1选项，静默使用（不显示提示信息）
-            llm = ChatDeepSeek(
-                model="deepseek-reasoner",
-                api_key=SecretStr(api_key),
-                base_url="https://api.deepseek.com",
-                max_tokens=2048  # R1减少到2K提升速度
-            )
+        llm = ChatDeepSeek(
+            model="deepseek-chat",  # 使用更快的chat模型
+            api_key=SecretStr(api_key),
+            base_url="https://api.deepseek.com",
+            max_tokens=1024,  # 减少token数量提升速度
+            temperature=0.7   # 适中的创造性
+        )
 
         return llm
 
     except Exception as e:
-        st.error(f"初始化AI模型失败: {e}")
-        st.error(f"错误详情: {str(e)}")
+        st.error(f"❌ API Key无效或网络错误，请检查你的Key后重试: {e}")
         st.stop()
 
 def safe_parse_json(response_text):
@@ -1685,39 +1859,14 @@ def safe_parse_json(response_text):
             "gift_content": "即使遇到困难，我们也要保持希望！你是最棒的！💪"
         }
 
-def analyze_mood(user_input, llm, session_id=None):
-    """【最终进化】分析用户情绪并生成精灵回应 - 支持五大模块的主动型治愈Agent"""
+def analyze_mood_streaming(user_input, llm, session_id=None):
+    """【无缝思考流】分析用户情绪并生成流式回应 - 革命性交互升级"""
     if not llm:
         st.warning("⚠️ AI模型未初始化，使用默认回应")
-        return safe_parse_json("")
-
-    # 生成输入哈希用于缓存（包含记忆和环境信息）
-    memory_hash = ""
-    env_hash = ""
-    if session_id:
-        core_memories = load_core_memories(session_id, limit=3)
-        memory_hash = str(hash(str(core_memories)))
-        env_context = get_environment_context()
-        env_hash = str(hash(str(env_context)))
-
-    input_hash = hashlib.md5(f"{user_input}{session_id or ''}{memory_hash}{env_hash}".encode()).hexdigest()
-    model_name = os.getenv('DEEPSEEK_MODEL', 'deepseek-chat')
-
-    # 检查缓存
-    cached_result = get_cached_response(input_hash, model_name)
-    if cached_result:
-        st.success("🚀 从缓存加载，响应更快！")
-        return cached_result
+        return "🧠 检测到系统问题，但小念还是想陪伴你~ ⚙️ 💖 虽然遇到了一些技术困难，但小念的心意是真诚的！愿你今天充满阳光！☀️"
 
     try:
-        # 【最终进化】获取三层记忆上下文（环境+核心记忆+工作记忆）
-        enhanced_context = ""
-        if session_id:
-            enhanced_context = get_enhanced_context(session_id, context_turns=4)
-        else:
-            enhanced_context = "这是我们第一次相遇呢~ ✨"
-
-        # 分离上下文信息用于新的Prompt结构
+        # 获取上下文信息
         env_context = get_environment_context()
         core_memories = load_core_memories(session_id, limit=5) if session_id else []
         recent_context = get_recent_context(session_id, 4) if session_id else []
@@ -1747,12 +1896,19 @@ def analyze_mood(user_input, llm, session_id=None):
                 if role == "user":
                     history_lines.append(f"用户: {content}")
                 elif role == "assistant":
-                    try:
-                        assistant_data = json.loads(content)
-                        reaction = assistant_data.get('sprite_reaction', content)
-                        history_lines.append(f"小念: {reaction}")
-                    except:
-                        history_lines.append(f"小念: {content}")
+                    # 处理新的文本流格式
+                    if '💖' in content:
+                        # 提取💖后的内容作为回应
+                        response_part = content.split('💖')[-1].strip()
+                        history_lines.append(f"小念: {response_part}")
+                    else:
+                        # 兼容旧的JSON格式
+                        try:
+                            assistant_data = json.loads(content)
+                            reaction = assistant_data.get('sprite_reaction', content)
+                            history_lines.append(f"小念: {reaction}")
+                        except:
+                            history_lines.append(f"小念: {content}")
             chat_history_text = "\n".join(history_lines)
         else:
             chat_history_text = "这是我们今天的第一次对话呢~ ✨"
@@ -1808,30 +1964,49 @@ def analyze_mood(user_input, llm, session_id=None):
                 st.write("**最终回答:**")
                 st.code(final_content)
 
-        # 使用最终回答进行JSON解析
-        result = safe_parse_json(final_content)
+        # 直接返回文本流内容
+        return final_content
 
-        # 【模块三】应用主题色彩
-        if 'theme_color' in result and result['theme_color']:
-            apply_theme_color(result['theme_color'])
+    except Exception as e:
+        st.error(f"AI分析出错: {e}")
+        return "🧠 遇到了一些技术问题，但小念还是想陪伴你~ ⚙️ 💖 即使遇到困难，我们也要保持希望！你是最棒的！💪"
 
-        # 【推理升级】在调试模式下显示意图识别结果
-        if os.getenv('DEBUG_MODE') == 'true' and 'user_intent' in result:
-            intent_names = {
-                'venting': '情感宣泄',
-                'seeking_advice': '寻求建议',
-                'sharing_joy': '分享快乐'
-            }
-            intent_name = intent_names.get(result['user_intent'], result['user_intent'])
-            st.info(f"🧠 AI识别的用户意图: {intent_name} ({result['user_intent']})")
+# ==================== 保留的JSON解析函数 (兼容性) ====================
 
-        # 保存到缓存
-        save_cached_response(input_hash, model_name, result)
+def analyze_mood(user_input, llm, session_id=None):
+    """【兼容性保留】原有的JSON格式分析函数"""
+    # 调用新的流式函数并转换为JSON格式
+    streaming_response = analyze_mood_streaming(user_input, llm, session_id)
+
+    # 解析流式回应并转换为JSON格式（用于兼容性）
+    try:
+        # 提取💖后的内容作为sprite_reaction
+        if '💖' in streaming_response:
+            sprite_reaction = streaming_response.split('💖')[-1].strip()
+        else:
+            sprite_reaction = streaming_response
+
+        # 简单的意图识别（基于关键词）
+        user_intent = "venting"
+        if any(keyword in user_input.lower() for keyword in ["怎么办", "建议", "怎么做", "帮助"]):
+            user_intent = "seeking_advice"
+        elif any(keyword in user_input.lower() for keyword in ["开心", "高兴", "好事", "成功"]):
+            user_intent = "sharing_joy"
+
+        # 构造兼容的JSON结果
+        result = {
+            "thinking_steps": ["基于流式回应的思考过程"],
+            "user_intent": user_intent,
+            "mood_category": "平静",
+            "theme_color": "#f0f8ff",
+            "sprite_reaction": sprite_reaction,
+            "gift_type": "元气咒语",
+            "gift_content": "小念的温暖陪伴~ ✨"
+        }
 
         return result
 
     except Exception as e:
-        st.error(f"AI分析出错: {e}")
         return safe_parse_json("")
 
 def render_sprite_display(mood, reaction):
@@ -1906,7 +2081,108 @@ def render_gift_display(gift_type, gift_content, session_id=None):
                 else:
                     st.error("收藏失败，请稍后再试")
 
-# ==================== 思考过程可视化组件 (终极进化新增) ====================
+# ==================== 无缝思考流可视化组件 (革命性升级) ====================
+
+def format_streaming_response_simple(full_response_str):
+    """
+    将带标记的文本流转换为简单的Streamlit组件
+    🧠 标记 -> 思考过程
+    ⚙️ 标记 -> 分隔符
+    💖 标记 -> 正式回应
+    """
+    if not full_response_str:
+        return
+
+    # 分割思考过程和正式回应
+    parts = full_response_str.split('⚙️')
+
+    # 处理思考过程部分
+    if len(parts) > 0:
+        thinking_part = parts[0].strip()
+        if thinking_part:
+            # 将🧠标记的内容转换为思考步骤
+            thinking_lines = thinking_part.split('🧠')
+
+            for i, line in enumerate(thinking_lines):
+                if line.strip():
+                    if i == 0 and not line.startswith('🧠'):
+                        # 第一行可能没有🧠标记
+                        continue
+
+                    # 显示思考步骤
+                    step_content = line.strip()
+                    st.markdown(f"""
+                    <div style="
+                        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                        border-left: 3px solid #6c757d;
+                        border-radius: 8px;
+                        padding: 0.6rem 0.8rem;
+                        margin: 0.3rem 0;
+                        font-size: 0.85rem;
+                        color: #6c757d;
+                        line-height: 1.4;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                    ">
+                        <div style="display: flex; align-items: flex-start; gap: 0.4rem;">
+                            <span style="font-size: 1rem; margin-top: 0.1rem;">🧠</span>
+                            <div style="flex: 1; font-style: italic;">
+                                {step_content}
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+    # 处理正式回应部分
+    if len(parts) > 1:
+        response_part = parts[1].strip()
+        if response_part:
+            # 移除💖标记并格式化回应
+            response_content = response_part.replace('💖', '').strip()
+
+            # 显示正式回应
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #fff0f5 0%, #ffe4e6 100%);
+                border-radius: 15px;
+                padding: 1rem 1.2rem;
+                margin: 0.8rem 0;
+                border: 1px solid rgba(255, 182, 193, 0.3);
+                box-shadow: 0 2px 8px rgba(255, 182, 193, 0.15);
+            ">
+                <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 1.2rem; margin-right: 0.5rem;">💖</span>
+                    <strong style="color: #FF69B4; font-size: 0.9rem;">小念</strong>
+                </div>
+                <div style="
+                    color: #2F2F2F;
+                    line-height: 1.6;
+                    font-size: 0.95rem;
+                ">
+                    {response_content}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+def render_streaming_thinking_simple(full_response_str):
+    """
+    简单渲染流式思考过程 - 避免HTML显示问题
+    """
+    format_streaming_response_simple(full_response_str)
+
+def simulate_streaming_response_simple(response_text, delay=0.01):
+    """
+    简单的流式响应效果 - 直接显示完整内容
+    """
+    # 显示思考中状态
+    with st.spinner("🧠 小念正在思考中..."):
+        time.sleep(1)  # 短暂延迟模拟思考
+
+    # 直接显示完整回应
+    render_streaming_thinking_simple(response_text)
+
+    return response_text
+
+# ==================== 保留的思考过程组件 (兼容性) ====================
 
 def render_thinking_process(thinking_steps, container=None):
     """
@@ -2047,50 +2323,64 @@ def render_chat_message(role, content, timestamp=None, gift_data=None):
         """, unsafe_allow_html=True)
 
     elif role == "assistant":
-        # AI消息 - 浅粉色气泡 (终极进化版 - 支持思考过程)
-        # 解析AI回应
-        try:
-            ai_data = json.loads(content) if isinstance(content, str) else content
-            thinking_steps = ai_data.get('thinking_steps', [])
-            reaction = ai_data.get('sprite_reaction', content)
-            gift_type = ai_data.get('gift_type', '')
-            gift_content = ai_data.get('gift_content', '')
-            mood = ai_data.get('mood_category', '平静')
-            sprite_emoji = SPRITE_EMOTIONS.get(mood, "🧚‍♀️")
-        except:
-            thinking_steps = []
-            reaction = content
-            gift_type = gift_content = ""
-            sprite_emoji = "🧚‍♀️"
+        # AI消息 - 无缝思考流版本 (革命性升级)
 
-        # 【终极进化】首先渲染思考过程
-        if thinking_steps:
-            render_thinking_process(thinking_steps)
+        # 检测是否为新的文本流格式
+        if '🧠' in content and '💖' in content:
+            # 新的文本流格式 - 使用简单渲染
+            render_streaming_thinking_simple(content)
 
-        # 渲染AI消息气泡
-        st.markdown(f"""
-        <div class="chat-message ai-message">
-            <div class="ai-bubble">
-                <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                    <span style="font-size: 1.2rem; margin-right: 0.5rem;">{sprite_emoji}</span>
-                    <strong style="color: #FF69B4;">小念</strong>
+            # 添加时间戳
+            if time_str:
+                st.markdown(f"""
+                <div style="text-align: right; color: #999; font-size: 0.8rem; margin-top: 0.5rem; margin-bottom: 1rem;">
+                    {time_str}
                 </div>
-                {reaction}
-                <div class="message-time" style="margin-top: 0.3rem;">{time_str}</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+        else:
+            # 兼容旧的JSON格式
+            try:
+                ai_data = json.loads(content) if isinstance(content, str) else content
+                thinking_steps = ai_data.get('thinking_steps', [])
+                reaction = ai_data.get('sprite_reaction', content)
+                gift_type = ai_data.get('gift_type', '')
+                gift_content = ai_data.get('gift_content', '')
+                mood = ai_data.get('mood_category', '平静')
+                sprite_emoji = SPRITE_EMOTIONS.get(mood, "🧚‍♀️")
+            except:
+                thinking_steps = []
+                reaction = content
+                gift_type = gift_content = ""
+                sprite_emoji = "🧚‍♀️"
 
-        # 如果有礼物，单独渲染礼物卡片
-        if gift_type and gift_content:
+            # 渲染思考过程（如果有）
+            if thinking_steps:
+                render_thinking_process(thinking_steps)
+
+            # 渲染AI消息气泡
             st.markdown(f"""
             <div class="chat-message ai-message">
-                <div class="chat-gift-card">
-                    <h5>🎁 {gift_type}</h5>
-                    <p>{gift_content}</p>
+                <div class="ai-bubble">
+                    <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="font-size: 1.2rem; margin-right: 0.5rem;">{sprite_emoji}</span>
+                        <strong style="color: #FF69B4;">小念</strong>
+                    </div>
+                    {reaction}
+                    <div class="message-time" style="margin-top: 0.3rem;">{time_str}</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+            # 如果有礼物，单独渲染礼物卡片
+            if gift_type and gift_content:
+                st.markdown(f"""
+                <div class="chat-message ai-message">
+                    <div class="chat-gift-card">
+                        <h5>🎁 {gift_type}</h5>
+                        <p>{gift_content}</p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
 def render_chat_interface(session_id):
     """渲染聊天界面 - 流式更新版本"""
@@ -2190,6 +2480,30 @@ def stream_text(text, delay=0.05):
 
 def main():
     """主函数 - 最终进化版 (主动型治愈Agent)"""
+    
+    # ==================== 检查API密钥配置 ====================
+    
+    # 渲染侧边栏API密钥输入界面
+    api_key_configured = render_api_key_sidebar()
+    
+    # 如果没有配置API密钥，显示提示信息并停止执行
+    if not api_key_configured:
+        st.info("👈 请在左侧侧边栏输入你的DeepSeek API Key以开始聊天。")
+        st.markdown("""
+        ### 欢迎来到心绪精灵！✨
+        
+        心绪精灵是一个主动型治愈Agent，具备五大核心模块：
+        
+        - 🌟 **轻量级主动性** - 主动关心问候
+        - 🌍 **环境感知** - 了解时间和情境
+        - 🎨 **心情调色盘** - 视觉化情感共鸣
+        - 🎁 **宝藏小盒** - 收集美好回忆
+        - 🤫 **秘密约定** - 特殊彩蛋惊喜
+        
+        配置你的API密钥后即可开始与小念的温暖对话~ 💕
+        """)
+        st.stop()
+
     # ==================== 数据库和会话初始化 ====================
 
     # 初始化数据库
@@ -2199,10 +2513,6 @@ def main():
 
     # 获取或创建会话ID
     session_id = get_or_create_session_id()
-
-    # 显示会话信息（仅在调试模式下）
-    if os.getenv('DEBUG_MODE') == 'true':
-        st.sidebar.write(f"🔍 Session ID: {session_id[:8]}...")
 
     # ==================== 初始化session state ====================
 
@@ -2233,7 +2543,7 @@ def main():
     <div class="subtitle">主动型治愈Agent - 让小念用五感陪伴你的每一种心情</div>
     """, unsafe_allow_html=True)
 
-    # 初始化LLM
+    # 初始化LLM - 使用用户提供的API密钥
     try:
         llm = initialize_llm()
     except Exception as e:
@@ -2244,47 +2554,49 @@ def main():
 
     # 检查是否需要主动问候
     if not st.session_state.proactive_greeting_shown and check_first_visit_today(session_id):
+        # 获取环境信息用于主动问候
+        env_context = get_environment_context()
+
         # 生成主动问候
         proactive_greeting = generate_proactive_greeting()
 
-        # 创建主动问候的AI回应格式
-        proactive_response = {
-            "thinking_steps": [
-                "第一步：检测到用户今日首次访问，需要主动问候",
-                "第二步：根据当前时间生成合适的问候语",
-                "第三步：选择温暖的主题色彩营造舒适氛围",
-                "第四步：准备元气咒语作为见面礼物",
-                "第五步：以温柔的语气表达关心和陪伴"
-            ],
-            "user_intent": "sharing_joy",  # 主动问候属于分享快乐类型
-            "mood_category": "温暖",
-            "theme_color": "#fff0f5",  # 温馨的淡粉
-            "sprite_reaction": proactive_greeting,
-            "gift_type": "元气咒语",
-            "gift_content": "今天也是充满可能性的一天！无论遇到什么，小念都会在这里陪伴你~ ✨"
-        }
+        # 【无缝思考流】创建主动问候的文本流格式
+        proactive_response_stream = f"""🧠 检测到用户今日首次访问，需要主动问候
+🧠 根据当前时间{env_context['time_of_day']}生成合适的问候语
+🧠 选择温暖的主题色彩营造舒适氛围
+🧠 准备温暖的陪伴作为见面礼物
+🧠 以温柔的语气表达关心和陪伴
+⚙️
+💖 {proactive_greeting}
+
+今天也是充满可能性的一天！无论遇到什么，小念都会在这里陪伴你~ ✨"""
 
         # 应用主题色彩
-        apply_theme_color(proactive_response['theme_color'])
+        apply_theme_color("#fff0f5")  # 温馨的淡粉
 
-        # 保存主动问候到数据库
-        ai_response_json = json.dumps(proactive_response, ensure_ascii=False)
-        save_message_to_db(session_id, "assistant", ai_response_json)
+        # 保存主动问候到数据库（使用新的文本流格式）
+        save_message_to_db(session_id, "assistant", proactive_response_stream)
 
-        # 静默显示主动问候（不显示额外提示）
-        render_sprite_display(proactive_response['mood_category'], proactive_response['sprite_reaction'])
-        render_gift_display(proactive_response['gift_type'], proactive_response['gift_content'], session_id)
+        # 【无缝思考流】静默显示主动问候
+        simulate_streaming_response_simple(proactive_response_stream)
 
         # 标记已显示主动问候
         st.session_state.proactive_greeting_shown = True
+
+        # 避免重复显示，重新运行页面以显示聊天界面
+        st.rerun()
     
     # ==================== 全新的聊天界面布局 (微信风格) ====================
 
     # 使用单列布局，专注于聊天体验
     st.markdown("### 💬 和小念聊天")
 
-    # 渲染聊天历史
-    chat_container = render_chat_interface(session_id)
+    # 渲染聊天历史（只有在没有显示主动问候时才显示）
+    if st.session_state.proactive_greeting_shown:
+        chat_container = render_chat_interface(session_id)
+    else:
+        # 如果还没有显示主动问候，先显示一个空的聊天容器
+        chat_container = st.container()
 
     # 输入区域（固定在底部）
     st.markdown("---")
@@ -2321,90 +2633,87 @@ def main():
             # 保存用户消息
             save_message_to_db(session_id, "user", user_input)
 
-            # 创建彩蛋回应
-            easter_egg_result = {
-                "thinking_steps": [
-                    f"第一步：检测到特殊关键词，触发了{easter_egg_type}彩蛋",
-                    "第二步：绕过标准AI流程，使用预设的特殊回应",
-                    "第三步：选择感动的情绪和温暖的主题色彩",
-                    "第四步：准备梦境碎片作为特殊礼物",
-                    "第五步：以惊喜的方式呈现彩蛋内容"
-                ],
-                "user_intent": "sharing_joy",  # 彩蛋通常属于分享快乐类型
-                "mood_category": "感动",
-                "theme_color": "#fdf5e6",  # 感动的老蕾丝色
-                "sprite_reaction": easter_egg_response,
-                "gift_type": "梦境碎片",
-                "gift_content": "这是小念为你特别准备的秘密礼物~ 希望能给你带来惊喜！✨"
-            }
+            # 【无缝思考流】创建彩蛋回应的文本流格式
+            easter_egg_stream = f"""🧠 检测到特殊关键词，触发了{easter_egg_type}彩蛋
+🧠 绕过标准AI流程，使用预设的特殊回应
+🧠 选择感动的情绪和温暖的主题色彩
+🧠 准备特殊的梦境碎片作为彩蛋礼物
+🧠 以惊喜的方式呈现彩蛋内容
+⚙️
+💖 {easter_egg_response}
+
+这是小念为你特别准备的秘密礼物~ 希望能给你带来惊喜！✨"""
 
             # 应用主题色彩
-            apply_theme_color(easter_egg_result['theme_color'])
+            apply_theme_color("#fdf5e6")  # 感动的老蕾丝色
 
-            # 保存彩蛋回应
-            ai_response_json = json.dumps(easter_egg_result, ensure_ascii=False)
-            save_message_to_db(session_id, "assistant", ai_response_json)
+            # 保存彩蛋回应（使用新的文本流格式）
+            save_message_to_db(session_id, "assistant", easter_egg_stream)
+
+            # 【无缝思考流】显示彩蛋回应
+            simulate_streaming_response_simple(easter_egg_stream)
 
             # 更新session state
-            st.session_state.current_mood = easter_egg_result['mood_category']
-            st.session_state.current_reaction = easter_egg_result['sprite_reaction']
+            st.session_state.current_mood = "感动"
+            st.session_state.current_reaction = easter_egg_response
             st.session_state.current_gift = {
-                "type": easter_egg_result['gift_type'],
-                "content": easter_egg_result['gift_content']
+                "type": "梦境碎片",
+                "content": "这是小念为你特别准备的秘密礼物~ 希望能给你带来惊喜！✨"
             }
 
             st.rerun()
         else:
-            # 【终极进化】标准AI流程 - 支持思考过程可视化
+            # 【无缝思考流】革命性AI流程 - DeepSeek式流式思考体验
             # 先保存用户消息到数据库
             save_message_to_db(session_id, "user", user_input)
 
-            # 创建思考过程显示容器
-            thinking_placeholder = st.empty()
+            # 【核心创新】创建魔法画板 - 使用st.empty()实现无缝流式渲染
+            response_placeholder = st.empty()
 
-            # 显示思考中状态
-            with thinking_placeholder.container():
-                with st.expander("🤔 小念正在思考中...", expanded=True):
-                    st.markdown("*小念的大脑正在飞速运转，请稍等...*")
-                    progress_bar = st.progress(0)
-                    status_text = st.empty()
+            # 显示初始思考状态
+            response_placeholder.markdown("""
+            <div class="chat-message ai-message" style="margin: 1rem 0;">
+                <div style="
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                    border-left: 3px solid #6c757d;
+                    border-radius: 8px;
+                    padding: 0.6rem 0.8rem;
+                    margin: 0.3rem 0;
+                    font-size: 0.85rem;
+                    color: #6c757d;
+                    line-height: 1.4;
+                    animation: thinkingPulse 1.5s ease-in-out infinite;
+                ">
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <span style="font-size: 1rem;" class="brain-icon">🧠</span>
+                        <div style="font-style: italic;">小念正在思考中...</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
-                    # 模拟思考过程
-                    for i in range(100):
-                        progress_bar.progress(i + 1)
-                        if i < 20:
-                            status_text.text("🧠 分析用户情绪和意图...")
-                        elif i < 40:
-                            status_text.text("💭 回顾相关记忆...")
-                        elif i < 60:
-                            status_text.text("🌍 结合环境信息...")
-                        elif i < 80:
-                            status_text.text("✨ 选择回应策略...")
-                        else:
-                            status_text.text("💡 生成最终回应...")
-                        time.sleep(0.02)  # 总共2秒的思考时间
+            # 【革命性升级】获取流式AI回应
+            streaming_response = analyze_mood_streaming(user_input, llm, session_id)
 
-            # 【最终进化】分析用户情绪（整合所有模块）
-            result = analyze_mood(user_input, llm, session_id)
+            # 清除思考中状态
+            response_placeholder.empty()
 
-            # 清除思考中状态，显示实际思考过程
-            thinking_placeholder.empty()
+            # 【简化版】直接显示完整回应
+            with response_placeholder.container():
+                render_streaming_thinking_simple(streaming_response)
 
-            # 【终极进化】渲染思考过程
-            if 'thinking_steps' in result and result['thinking_steps']:
-                render_thinking_process_streaming(result['thinking_steps'])
+            # 将AI回应保存到数据库（保存文本流格式）
+            save_message_to_db(session_id, "assistant", streaming_response)
 
-            # 将AI回应保存到数据库（保存完整的JSON数据）
-            ai_response_json = json.dumps(result, ensure_ascii=False)
-            save_message_to_db(session_id, "assistant", ai_response_json)
-
-            # 更新session state（保持兼容性）
-            st.session_state.current_mood = result['mood_category']
-            st.session_state.current_reaction = result['sprite_reaction']
-            st.session_state.current_gift = {
-                "type": result['gift_type'],
-                "content": result['gift_content']
-            }
+            # 更新session state（兼容性处理）
+            if '💖' in streaming_response:
+                final_response = streaming_response.split('💖')[-1].strip()
+                st.session_state.current_reaction = final_response
+                st.session_state.current_mood = "温暖"
+                st.session_state.current_gift = {
+                    "type": "温暖陪伴",
+                    "content": "小念的无缝思考流~ ✨"
+                }
 
             # 重新运行以更新显示
             st.rerun()
