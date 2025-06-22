@@ -14,6 +14,7 @@ import time
 import random
 import sqlite3
 import uuid
+import hashlib
 from datetime import datetime
 from langchain_deepseek import ChatDeepSeek
 from langchain_core.prompts import PromptTemplate
@@ -47,8 +48,57 @@ except Exception as e:
 # 确保有API密钥可用，如果.env文件无法加载，使用备用配置
 if not env_loaded or not os.getenv('DEEPSEEK_API_KEY'):
     os.environ['DEEPSEEK_API_KEY'] = 'sk-0d3e163a4e4c4b799f1a9cdac3e4a064'
-    os.environ['DEEPSEEK_MODEL'] = 'deepseek-reasoner'
+    os.environ['DEEPSEEK_MODEL'] = 'deepseek-chat'  # 使用更快的chat模型
     os.environ['DEEPSEEK_API_BASE'] = 'https://api.deepseek.com'
+
+# ==================== 缓存机制 (新增) ====================
+
+@st.cache_data(ttl=3600)  # 缓存1小时
+def get_cached_response(input_hash, model_name):
+    """获取缓存的AI响应"""
+    try:
+        conn = sqlite3.connect('mind_sprite.db')
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT response FROM ai_cache 
+            WHERE input_hash = ? AND model = ? 
+            AND created_at > datetime('now', '-1 hour')
+        ''', (input_hash, model_name))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        return json.loads(result[0]) if result else None
+    except:
+        return None
+
+def save_cached_response(input_hash, model_name, response):
+    """保存AI响应到缓存"""
+    try:
+        conn = sqlite3.connect('mind_sprite.db')
+        cursor = conn.cursor()
+        
+        # 创建缓存表（如果不存在）
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS ai_cache (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                input_hash TEXT NOT NULL,
+                model TEXT NOT NULL,
+                response TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        cursor.execute('''
+            INSERT OR REPLACE INTO ai_cache (input_hash, model, response)
+            VALUES (?, ?, ?)
+        ''', (input_hash, model_name, json.dumps(response, ensure_ascii=False)))
+        
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        st.error(f"缓存保存失败: {e}")
 
 # ==================== 数据库相关功能 (新增) ====================
 
@@ -814,15 +864,27 @@ def initialize_llm():
             st.error("请在.env文件中配置DEEPSEEK_API_KEY")
             st.stop()
 
-        # 使用deepseek-reasoner (R1)模型 - 强大的推理能力
-        # 注意：R1不支持temperature等参数，但支持JSON输出
-        llm = ChatDeepSeek(
-            model="deepseek-reasoner",  # 使用最新的R1-0528推理模型
-            api_key=SecretStr(api_key),
-            base_url="https://api.deepseek.com",
-            max_tokens=4096  # R1支持最大64K，这里设置4K足够用
-            # 注意：不设置temperature，因为R1不支持
-        )
+        # 使用deepseek-chat模型 - 平衡速度和质量，比R1快很多
+        # chat模型支持temperature等参数，响应更快
+        model_name = os.getenv('DEEPSEEK_MODEL', 'deepseek-chat')
+        
+        if model_name == 'deepseek-chat':
+            llm = ChatDeepSeek(
+                model="deepseek-chat",  # 使用更快的chat模型
+                api_key=SecretStr(api_key),
+                base_url="https://api.deepseek.com",
+                max_tokens=1024,  # 减少token数量提升速度
+                temperature=0.7   # 适中的创造性
+            )
+        else:
+            # 保留R1选项，但警告速度较慢
+            st.info("💡 正在使用DeepSeek R1推理模型，响应较慢但推理能力更强")
+            llm = ChatDeepSeek(
+                model="deepseek-reasoner",
+                api_key=SecretStr(api_key),
+                base_url="https://api.deepseek.com",
+                max_tokens=2048  # R1减少到2K提升速度
+            )
 
         return llm
 
@@ -875,10 +937,20 @@ def safe_parse_json(response_text):
         }
 
 def analyze_mood(user_input, llm, session_id=None):
-    """分析用户情绪并生成精灵回应 (升级支持对话历史)"""
+    """分析用户情绪并生成精灵回应 (升级支持对话历史+缓存)"""
     if not llm:
         st.warning("⚠️ AI模型未初始化，使用默认回应")
         return safe_parse_json("")
+
+    # 生成输入哈希用于缓存
+    input_hash = hashlib.md5(f"{user_input}{session_id or ''}".encode()).hexdigest()
+    model_name = os.getenv('DEEPSEEK_MODEL', 'deepseek-chat')
+    
+    # 检查缓存
+    cached_result = get_cached_response(input_hash, model_name)
+    if cached_result:
+        st.success("🚀 从缓存加载，响应更快！")
+        return cached_result
 
     try:
         # 获取对话历史上下文
@@ -939,7 +1011,12 @@ def analyze_mood(user_input, llm, session_id=None):
                     st.code(chat_history)
 
         # 使用最终回答进行JSON解析
-        return safe_parse_json(final_content)
+        result = safe_parse_json(final_content)
+        
+        # 保存到缓存
+        save_cached_response(input_hash, model_name, result)
+        
+        return result
 
     except Exception as e:
         st.error(f"AI分析出错: {e}")

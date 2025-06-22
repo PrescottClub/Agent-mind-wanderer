@@ -40,7 +40,7 @@ class Settings:
         # 确保有API密钥可用，如果.env文件无法加载，使用备用配置
         if not env_loaded or not os.getenv('DEEPSEEK_API_KEY'):
             os.environ['DEEPSEEK_API_KEY'] = 'sk-0d3e163a4e4c4b799f1a9cdac3e4a064'
-            os.environ['DEEPSEEK_MODEL'] = 'deepseek-reasoner'
+            os.environ['DEEPSEEK_MODEL'] = 'deepseek-chat'  # 默认使用更快的chat模型
             os.environ['DEEPSEEK_API_BASE'] = 'https://api.deepseek.com'
 
     @property
@@ -51,7 +51,7 @@ class Settings:
     @property
     def deepseek_model(self) -> str:
         """获取DeepSeek模型名称"""
-        return os.getenv('DEEPSEEK_MODEL', 'deepseek-reasoner')
+        return os.getenv('DEEPSEEK_MODEL', 'deepseek-chat')
 
     @property
     def deepseek_api_base(self) -> str:
@@ -66,7 +66,7 @@ class Settings:
     @property
     def max_tokens(self) -> int:
         """AI模型最大token数"""
-        return int(os.getenv('MAX_TOKENS', '4096'))
+        return int(os.getenv('MAX_TOKENS', '1024'))  # 减少token数量提升速度
 
 
 # 全局设置实例

@@ -29,14 +29,25 @@ class AIEngine:
                 st.error("请在.env文件中配置DEEPSEEK_API_KEY")
                 return
 
-            # 使用deepseek-reasoner (R1)模型 - 强大的推理能力
-            # 注意：R1不支持temperature等参数，但支持JSON输出
-            self.llm = ChatDeepSeek(
-                model=settings.deepseek_model,
-                api_key=SecretStr(settings.deepseek_api_key),
-                base_url=settings.deepseek_api_base,
-                max_tokens=settings.max_tokens
-            )
+            # 根据模型类型使用不同配置
+            if settings.deepseek_model == 'deepseek-chat':
+                # chat模型 - 更快的响应速度
+                self.llm = ChatDeepSeek(
+                    model=settings.deepseek_model,
+                    api_key=SecretStr(settings.deepseek_api_key),
+                    base_url=settings.deepseek_api_base,
+                    max_tokens=settings.max_tokens,
+                    temperature=0.7  # chat模型支持temperature参数
+                )
+            else:
+                # R1推理模型 - 强大但较慢
+                st.info("💡 正在使用DeepSeek R1推理模型，响应较慢但推理能力更强")
+                self.llm = ChatDeepSeek(
+                    model=settings.deepseek_model,
+                    api_key=SecretStr(settings.deepseek_api_key),
+                    base_url=settings.deepseek_api_base,
+                    max_tokens=min(settings.max_tokens, 2048)  # R1限制token数量
+                )
 
         except Exception as e:
             st.error(f"初始化AI模型失败: {e}")
