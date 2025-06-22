@@ -57,6 +57,30 @@ SPRITE_EMOTIONS = {
     "困惑": "(・_・?)"
 }
 
+# 精灵装饰元素
+SPRITE_DECORATIONS = [
+    "✨", "🌸", "💖", "🧚‍♀️", "🎀", "🌙", "⭐", "💫", "🦋", "🌺", 
+    "💕", "🌈", "🎈", "🍀", "🌻", "🎊", "💝", "🌟", "🦄", "🎵"
+]
+
+# 可爱的加载文案
+LOADING_MESSAGES = [
+    "小念正在用心感受你的心情... ✨",
+    "小念在花园里寻找最适合的礼物... 🌸",
+    "小念正在织梦中，马上就好... 🌙",
+    "小念在星空中收集闪亮的想法... ⭐",
+    "小念正轻轻拍动翅膀，为你准备惊喜... 🧚‍♀️"
+]
+
+# 可爱的按钮文案
+BUTTON_MESSAGES = [
+    "💝 分享心情",
+    "🌸 告诉小念",
+    "✨ 心情快递",
+    "🧚‍♀️ 找小念聊天",
+    "💖 心灵交流"
+]
+
 # AI Prompt模板
 MIND_SPRITE_PROMPT = """
 你是一只住在网页里的可爱小精灵，名叫小念(Xiao Nian)。
@@ -88,9 +112,18 @@ header {visibility: hidden;}
 
 /* 全局字体和背景 */
 .stApp {
-    background-color: #FFF0F5;
+    background: linear-gradient(45deg, #FFF0F5 0%, #F0F8FF 50%, #FFF0F5 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
     font-family: 'M PLUS Rounded 1c', sans-serif;
     color: #2F2F2F;
+    position: relative;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 * {
@@ -128,6 +161,7 @@ header {visibility: hidden;}
 
 /* 精灵展示区样式 */
 .sprite-container {
+    position: relative;
     background: linear-gradient(135deg, #FFE4E1 0%, #F0FFF0 100%);
     border-radius: 25px;
     padding: clamp(1rem, 4vw, 2rem);
@@ -141,6 +175,7 @@ header {visibility: hidden;}
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
 }
 
 .sprite-emoji {
@@ -150,9 +185,41 @@ header {visibility: hidden;}
 }
 
 @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-8px) rotate(1deg); }
+    50% { transform: translateY(-15px) rotate(0deg); }
+    75% { transform: translateY(-8px) rotate(-1deg); }
 }
+
+@keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(1deg); }
+    75% { transform: rotate(-1deg); }
+}
+
+/* 装饰性闪光元素 */
+.decoration {
+    position: absolute;
+    animation: sparkle 2s ease-in-out infinite;
+    pointer-events: none;
+    font-size: 1.2rem;
+    z-index: 1;
+}
+
+.decoration:nth-child(1) { top: 10%; left: 15%; animation-delay: 0s; }
+.decoration:nth-child(2) { top: 20%; right: 20%; animation-delay: 0.5s; }
+.decoration:nth-child(3) { bottom: 30%; left: 10%; animation-delay: 1s; }
+.decoration:nth-child(4) { bottom: 15%; right: 15%; animation-delay: 1.5s; }
 
 .sprite-name {
     font-size: clamp(1.2rem, 3vw, 1.8rem);
@@ -204,8 +271,9 @@ header {visibility: hidden;}
 }
 
 .stButton > button:hover {
-    transform: translateY(-2px) !important;
+    transform: translateY(-2px) scale(1.05) !important;
     box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    animation: heartbeat 0.6s ease-in-out !important;
 }
 
 /* 回应卡片样式 */
@@ -225,6 +293,13 @@ header {visibility: hidden;}
     margin: 1rem 0;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     border: 2px solid rgba(255,255,255,0.8);
+    transition: all 0.3s ease;
+    animation: wiggle 3s ease-in-out infinite;
+}
+
+.gift-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
 }
 
 /* 历史记录画廊样式 */
@@ -377,11 +452,18 @@ def render_sprite_display(mood, reaction):
     """渲染精灵显示区域"""
     sprite_emoji = SPRITE_EMOTIONS.get(mood, "( ´ ▽ ` )")
     
+    # 随机选择装饰元素
+    decorations = random.sample(SPRITE_DECORATIONS, 4)
+    
     st.markdown(f"""
     <div class="sprite-container">
+        <div class="decoration">{decorations[0]}</div>
+        <div class="decoration">{decorations[1]}</div>
+        <div class="decoration">{decorations[2]}</div>
+        <div class="decoration">{decorations[3]}</div>
         <div class="sprite-emoji">{sprite_emoji}</div>
-        <div class="sprite-name">小念 (Xiao Nian)</div>
-        <div class="sprite-status">心情: {mood}</div>
+        <div class="sprite-name">小念 (Xiao Nian) ✨</div>
+        <div class="sprite-status">💫 心情: {mood} 💫</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -496,11 +578,15 @@ def main():
             key="user_input"
         )
         
+        # 随机选择按钮文案和加载消息
+        button_text = random.choice(BUTTON_MESSAGES)
+        loading_message = random.choice(LOADING_MESSAGES)
+        
         # 按钮
-        if st.button("💝 分享心情", type="primary"):
+        if st.button(button_text, type="primary"):
             if user_input.strip():
                 # 显示加载状态
-                with st.spinner("小念正在用心感受你的心情... ✨"):
+                with st.spinner(loading_message):
                     # 分析用户情绪
                     result = analyze_mood(user_input, llm)
                     
