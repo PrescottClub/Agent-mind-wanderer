@@ -130,12 +130,13 @@ header {visibility: hidden;}
 .sprite-container {
     background: linear-gradient(135deg, #FFE4E1 0%, #F0FFF0 100%);
     border-radius: 25px;
-    padding: 2rem;
+    padding: clamp(1rem, 4vw, 2rem);
     text-align: center;
     box-shadow: 0 8px 32px rgba(0,0,0,0.1);
     border: 2px solid rgba(255,255,255,0.8);
     margin-bottom: 1rem;
-    height: 300px;
+    min-height: 250px;
+    height: auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -143,7 +144,7 @@ header {visibility: hidden;}
 }
 
 .sprite-emoji {
-    font-size: 4rem;
+    font-size: clamp(3rem, 8vw, 6rem);
     margin-bottom: 1rem;
     animation: float 3s ease-in-out infinite;
 }
@@ -154,25 +155,23 @@ header {visibility: hidden;}
 }
 
 .sprite-name {
-    font-size: 1.5rem;
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
     font-weight: 500;
     color: #2F2F2F;
     margin-bottom: 0.5rem;
 }
 
 .sprite-status {
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
     color: #555 !important;
     font-weight: 400;
 }
 
 /* 互动控制区样式 */
 .control-container {
-    background: white;
+    background: transparent;
     border-radius: 25px;
-    padding: 2rem;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    border: 2px solid rgba(255,255,255,0.8);
+    padding: 1rem;
     margin-bottom: 1rem;
 }
 
@@ -489,9 +488,6 @@ def main():
     with col2:
         st.markdown("### 💬 和小念聊天")
         
-        # 包装在控制容器中
-        st.markdown('<div class="control-container">', unsafe_allow_html=True)
-        
         # 用户输入区域
         user_input = st.text_area(
             "今天发生了什么，来告诉小念吧~ ♡",
@@ -501,7 +497,7 @@ def main():
         )
         
         # 按钮
-        if st.button("💝 喂养心情", type="primary"):
+        if st.button("💝 分享心情", type="primary"):
             if user_input.strip():
                 # 显示加载状态
                 with st.spinner("小念正在用心感受你的心情... ✨"):
@@ -531,8 +527,6 @@ def main():
                     st.rerun()
             else:
                 st.warning("记得要告诉小念一些什么哦~ 哪怕只是一个字也好 (◕‿◕)✨")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
         
         # 显示礼物
         if st.session_state.current_gift["type"]:
