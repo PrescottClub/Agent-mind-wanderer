@@ -20,10 +20,13 @@ from pathlib import Path
 
 # 加载环境变量
 env_path = Path(__file__).parent / '.env'
+env_loaded = False
+
 try:
     load_dotenv(dotenv_path=env_path)
-except UnicodeDecodeError:
-    # 如果遇到编码问题，尝试手动读取并设置环境变量
+    env_loaded = True
+except Exception as e:
+    # 如果遇到任何问题，尝试手动读取并设置环境变量
     try:
         with open(env_path, 'r', encoding='utf-8-sig') as f:  # utf-8-sig 会自动处理BOM
             for line in f:
@@ -31,12 +34,14 @@ except UnicodeDecodeError:
                 if line and '=' in line and not line.startswith('#'):
                     key, value = line.split('=', 1)
                     os.environ[key.strip()] = value.strip()
-    except Exception as e:
-        print(f"Warning: Could not load .env file: {e}")
+            env_loaded = True
+    except Exception as e2:
+        print(f"Warning: Could not load .env file: {e2}")
+        # 文件可能不存在或有问题，使用备用配置
         pass
 
-# 如果.env文件无法加载，使用备用配置
-if not os.getenv('DEEPSEEK_API_KEY'):
+# 确保有API密钥可用，如果.env文件无法加载，使用备用配置
+if not env_loaded or not os.getenv('DEEPSEEK_API_KEY'):
     os.environ['DEEPSEEK_API_KEY'] = 'sk-0d3e163a4e4c4b799f1a9cdac3e4a064'
     os.environ['DEEPSEEK_MODEL'] = 'deepseek-reasoner'
     os.environ['DEEPSEEK_API_BASE'] = 'https://api.deepseek.com'
