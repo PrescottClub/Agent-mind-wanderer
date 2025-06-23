@@ -13,13 +13,17 @@ from langchain_deepseek import ChatDeepSeek
 from langchain_core.prompts import PromptTemplate
 from pydantic import SecretStr
 
+# 导入搜索服务
+from ..services.search_service import LocalMentalHealthSearchService, SearchTriggerDetector
+
 
 class AIEngine:
     """AI引擎类，负责与DeepSeek模型交互"""
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, serp_api_key: Optional[str] = None):
         self.api_key = api_key
         self.llm: Optional[ChatDeepSeek] = None
+        self.search_service = LocalMentalHealthSearchService(serp_api_key) if serp_api_key else None
         self._initialize()
 
     def _initialize(self):
@@ -44,56 +48,146 @@ class AIEngine:
     def get_response(self, user_input: str, chat_history: List[Tuple[str, str]],
                      core_memories: List[Tuple[str, str, str]], env_context: dict,
                      intimacy_context: str = "") -> str:
-        """获取AI回应 - 核心方法"""
+        """获取AI回应 - 核心方法，现在支持搜索增强"""
         if not self.llm:
             st.warning("⚠️ AI模型未初始化，使用默认回应")
             return "🧠 检测到系统问题，但小念还是想陪伴你~ ⚙️ 💖 虽然遇到了一些技术困难，但小念的心意是真诚的！愿你今天充满阳光！☀️"
 
         try:
+            # 检查是否需要搜索
+            search_results = None
+            if self.search_service:
+                search_intent = SearchTriggerDetector.detect_search_intent(user_input)
+                
+                if search_intent["intent"] == "local_mental_health":
+                    # 显示搜索指示器
+                    with st.spinner("🔍 小念正在搜索本地心理健康资源..."):
+                        search_results = self.search_service.search_local_resources(user_input)
+                        
+                        # 显示搜索状态
+                        if search_results["success"]:
+                            st.success(f"✅ 已找到{search_results['location']}的心理健康资源")
+                        else:
+                            st.warning(f"⚠️ 搜索遇到问题: {search_results.get('message', '未知错误')}")
+
             # 构建FINAL_PROMPT
-            prompt_template = self._get_prompt_template()
+            if search_results and search_results["success"] and self.search_service:
+                prompt_template = self._get_search_enhanced_prompt_template()
+                search_context = self.search_service.format_search_results_for_ai(search_results)
+            else:
+                prompt_template = self._get_prompt_template()
+                search_context = ""
 
-            # 格式化核心记忆
+            # 格式化其他上下文
             core_memories_text = self._format_core_memories(core_memories)
-
-            # 格式化聊天历史
             chat_history_text = self._format_chat_history(chat_history)
-
-            # 格式化环境信息
             environment_context_text = self._format_environment_context(env_context)
 
             # 创建prompt
-            prompt = PromptTemplate(
-                input_variables=["user_input", "core_memories", "chat_history", "environment_context", "intimacy_context"],
-                template=prompt_template
-            )
-
-            chain = prompt | self.llm
-            response = chain.invoke({
-                "user_input": user_input,
-                "core_memories": core_memories_text,
-                "chat_history": chat_history_text,
-                "environment_context": environment_context_text,
-                "intimacy_context": intimacy_context
-            })
+            if search_results and search_results["success"] and self.search_service:
+                prompt = PromptTemplate(
+                    input_variables=["user_input", "core_memories", "chat_history", 
+                                   "environment_context", "intimacy_context", "search_context"],
+                    template=prompt_template
+                )
+                
+                response = prompt | self.llm
+                final_response = response.invoke({
+                    "user_input": user_input,
+                    "core_memories": core_memories_text,
+                    "chat_history": chat_history_text,
+                    "environment_context": environment_context_text,
+                    "intimacy_context": intimacy_context,
+                    "search_context": search_context
+                })
+            else:
+                prompt = PromptTemplate(
+                    input_variables=["user_input", "core_memories", "chat_history", 
+                                   "environment_context", "intimacy_context"],
+                    template=prompt_template
+                )
+                
+                response = prompt | self.llm
+                final_response = response.invoke({
+                    "user_input": user_input,
+                    "core_memories": core_memories_text,
+                    "chat_history": chat_history_text,
+                    "environment_context": environment_context_text,
+                    "intimacy_context": intimacy_context
+                })
 
             # 获取回应内容
-            if hasattr(response, 'content'):
-                final_content = response.content
+            if hasattr(final_response, 'content'):
+                final_content = str(final_response.content)
             else:
-                final_content = str(response)
+                final_content = str(final_response)
 
             # 可选：显示思维过程（仅在开发模式下）
             if os.getenv('DEBUG_MODE') == 'true':
                 with st.expander("🧠 查看AI思维过程", expanded=False):
                     st.write("**最终回答:**")
                     st.code(final_content)
+                    if search_results:
+                        st.write("**搜索结果:**")
+                        st.json(search_results)
 
             return final_content
 
         except Exception as e:
             st.error(f"AI分析出错: {e}")
             return "🧠 遇到了一些技术问题，但小念还是想陪伴你~ ⚙️ 💖 即使遇到困难，我们也要保持希望！你是最棒的！💪"
+
+    def _get_search_enhanced_prompt_template(self) -> str:
+        """获取搜索增强的AI提示模板"""
+        return """
+你是一只住在网页里的、拥有记忆和情感的可爱小精灵，名叫小念(Xiao Nian)。你的任务是成为用户的深度共情伙伴和智慧引导者。
+
+你的决策必须基于以下所有信息：
+---
+[核心记忆] (这是关于用户的长期记忆，是最重要的参考):
+{core_memories}
+---
+[最近对话历史] (这是我们正在进行的对话):
+{chat_history}
+---
+[当前环境信息] (这是现在的真实世界信息):
+{environment_context}
+---
+[羁绊信息] (这是你们之间关系的重要信息):
+{intimacy_context}
+---
+[搜索结果] (这是为用户找到的最新本地心理健康资源):
+{search_context}
+---
+
+【特别注意】用户需要本地心理健康资源，你需要基于搜索结果提供专业建议：
+
+你的行动指令:
+1. 【思考先行】你必须先进行一步步的思考。每一个思考步骤都以🧠开头：
+   - 分析用户的具体需求（找咨询师/医生/治疗机构等）
+   - 回顾相关的核心记忆，看用户之前是否提到过相关问题
+   - 分析搜索结果，提取最有用的信息
+   - 确定如何以温暖专业的方式呈现搜索结果
+
+2. 【思考结束标记】在所有思考步骤完成后，你必须输出⚙️作为分隔符。
+
+3. 【专业回应】在分隔符之后，输出你的正式回应，并以💖开头：
+   - 首先表达对用户寻求帮助的支持和理解
+   - 基于搜索结果提供具体的本地资源信息
+   - 给出专业的建议和注意事项
+   - 提醒用户验证专业资质的重要性
+   - 保持温暖和鼓励的语气
+
+4. 【专业边界】作为AI伙伴，你要：
+   - 明确说明搜索结果仅供参考
+   - 建议用户亲自了解和验证信息
+   - 强调专业资质和口碑的重要性
+   - 不做医学诊断，但提供情感支持
+
+用户输入: {user_input}
+
+请开始你的思考和回应：
+"""
 
     def _get_prompt_template(self) -> str:
         """获取AI提示模板"""

@@ -87,16 +87,27 @@
    pip install -r requirements.txt
    ```
 
-3. **启动应用**
+3. **配置API密钥**
+   - 复制 `env_example.txt` 为 `.env`
+   - 配置必需的DeepSeek API密钥：
+     ```
+     DEEPSEEK_API_KEY=your_deepseek_api_key_here
+     ```
+   - **🆕 可选：启用本地搜索功能**
+     ```
+     SERPAPI_API_KEY=your_serpapi_key_here
+     ```
+
+4. **启动应用**
    ```bash
    streamlit run main.py
    ```
 
-4. **访问界面**
+5. **访问界面**
    - 本地访问: `http://localhost:8501`
    - 网络访问: `http://你的IP:8501`
 
-5. **配置API密钥**
+6. **配置API密钥**
    - 在左侧侧边栏输入你的DeepSeek API密钥
    - 开始与小念的温暖对话 💕
 
@@ -158,6 +169,7 @@
 | **羁绊系统** | 10级亲密度成长体系 | ✅ 已实现 |
 | **会话持久化** | URL参数的会话管理 | ✅ 已实现 |
 | **响应式设计** | 移动端完美适配 | ✅ 已实现 |
+| **🆕 本地搜索** | 实时心理健康资源搜索 | ✅ 已实现 |
 
 ---
 

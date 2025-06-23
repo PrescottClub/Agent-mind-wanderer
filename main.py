@@ -11,6 +11,7 @@ import streamlit as st
 import time
 import uuid
 from datetime import datetime
+from typing import Optional
 
 # 导入重构后的模块
 from src.data.database import init_db
@@ -20,6 +21,7 @@ from src.services.intimacy_service import IntimacyService
 from src.core.ai_engine import AIEngine
 from src.core.session_manager import SessionManager
 from src.ui.components.sidebar import render_sidebar
+from src.config.settings import settings
 from src.utils.helpers import (
     get_environment_context,
     check_first_visit_today,
@@ -53,9 +55,9 @@ class MindSpriteApp:
         self.intimacy_service = IntimacyService(self.user_profile_repo)
         self.ai_engine = None
         
-    def initialize_ai_engine(self, api_key: str):
+    def initialize_ai_engine(self, api_key: str, serp_api_key: Optional[str] = None):
         """初始化AI引擎"""
-        self.ai_engine = AIEngine(api_key)
+        self.ai_engine = AIEngine(api_key, serp_api_key)
     
     def render_header(self):
         """渲染页面头部"""
@@ -123,6 +125,10 @@ class MindSpriteApp:
         intimacy_context = self.intimacy_service.get_intimacy_context_for_ai(session_id)
 
         # 获取AI回应
+        if not self.ai_engine:
+            st.error("AI引擎未初始化")
+            return
+            
         with st.spinner("小念正在思考中..."):
             ai_response = self.ai_engine.get_response(
                 user_input, recent_context, core_memories, env_context, intimacy_context
@@ -281,7 +287,7 @@ class MindSpriteApp:
             st.stop()
         
         # 初始化AI引擎
-        self.initialize_ai_engine(api_key)
+        self.initialize_ai_engine(api_key, settings.serp_api_key)
         
         # 渲染页面头部
         self.render_header()

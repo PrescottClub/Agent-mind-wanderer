@@ -59,6 +59,16 @@ class Settings:
         return os.getenv('DEEPSEEK_API_BASE', 'https://api.deepseek.com')
 
     @property
+    def serp_api_key(self) -> Optional[str]:
+        """获取SerpApi密钥"""
+        return os.getenv('SERPAPI_API_KEY')
+
+    @property
+    def search_enabled(self) -> bool:
+        """是否启用搜索功能"""
+        return self.serp_api_key is not None
+
+    @property
     def debug_mode(self) -> bool:
         """是否开启调试模式"""
         return os.getenv('DEBUG_MODE', 'false').lower() == 'true'
