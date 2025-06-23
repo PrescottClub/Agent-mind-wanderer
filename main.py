@@ -350,6 +350,9 @@ class MindSpriteApp:
                     scheduled_time = task.get('scheduled_time', '')
                     if isinstance(scheduled_time, str) and len(scheduled_time) >= 16:
                         time_display = scheduled_time[:16]
+                    elif hasattr(scheduled_time, 'strftime') and not isinstance(scheduled_time, str):
+                        # 如果是datetime对象，格式化为字符串
+                        time_display = scheduled_time.strftime('%Y-%m-%d %H:%M')
                     else:
                         time_display = str(scheduled_time)
                     st.caption(f"💝 小念已为你安排 {type_name} （{time_display}）")
