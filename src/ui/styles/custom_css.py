@@ -896,5 +896,134 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-bottom: 1.5rem !important;
     text-shadow: 0 2px 4px rgba(255, 122, 158, 0.2) !important;
 }
+
+/* 💖 美化聊天输入框图标 */
+[data-testid="stChatInput"] {
+    position: relative !important;
+}
+
+/* 聊天输入框容器 */
+[data-testid="stChatInput"] > div {
+    border-radius: 25px !important;
+    border: 2px solid var(--border) !important;
+    background: var(--bg-card) !important;
+    box-shadow: 0 4px 15px var(--shadow) !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-testid="stChatInput"] > div:focus-within {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px var(--focus-ring), 0 6px 20px var(--shadow) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* 聊天输入框 */
+[data-testid="stChatInput"] textarea {
+    border: none !important;
+    background: transparent !important;
+    padding: 16px 60px 16px 20px !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    color: var(--text) !important;
+    resize: none !important;
+    border-radius: 25px !important;
+}
+
+[data-testid="stChatInput"] textarea::placeholder {
+    color: rgba(75, 75, 75, 0.5) !important;
+    font-style: italic !important;
+}
+
+/* 发送按钮样式美化 */
+[data-testid="stChatInput"] button {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%) !important;
+    border: none !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 4px 12px rgba(255, 122, 158, 0.3) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-testid="stChatInput"] button:hover {
+    transform: translateY(-50%) scale(1.1) !important;
+    box-shadow: 0 6px 18px rgba(255, 122, 158, 0.4) !important;
+    border-color: rgba(255, 255, 255, 1) !important;
+}
+
+[data-testid="stChatInput"] button:active {
+    transform: translateY(-50%) scale(0.95) !important;
+}
+
+/* 发送按钮图标 */
+[data-testid="stChatInput"] button svg {
+    width: 18px !important;
+    height: 18px !important;
+    color: white !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1)) !important;
+}
+
+/* 添加可爱的装饰效果 */
+[data-testid="stChatInput"]::before {
+    content: '💭' !important;
+    position: absolute !important;
+    left: -35px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 20px !important;
+    opacity: 0.6 !important;
+    animation: float 3s ease-in-out infinite !important;
+    z-index: 1 !important;
+}
+
+[data-testid="stChatInput"]::after {
+    content: '✨' !important;
+    position: absolute !important;
+    right: -35px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 18px !important;
+    opacity: 0.6 !important;
+    animation: float 3s ease-in-out infinite reverse !important;
+    z-index: 1 !important;
+}
+
+/* 浮动动画 */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(-50%) translateX(0) !important;
+    }
+    50% {
+        transform: translateY(-50%) translateX(5px) !important;
+    }
+}
+
+/* 修复底部黑色问题 - 添加可爱的底部装饰 */
+.stApp::after {
+    content: '' !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 50px !important;
+    background: linear-gradient(to top, var(--accent) 0%, transparent 100%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+/* 确保内容在装饰之上 */
+.main {
+    position: relative !important;
+    z-index: 1 !important;
+}
 </style>
 """

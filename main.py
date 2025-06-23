@@ -488,11 +488,11 @@ class MindSpriteApp:
         # 渲染页面头部
         self.render_header()
         
-        # 处理主动问候
-        self.handle_proactive_greeting()
-        
         # 渲染聊天历史
         self.render_chat_history()
+        
+        # 处理主动问候（在历史之后，避免重复显示）
+        self.handle_proactive_greeting()
         
         # 【v5.2】智能情感分析与深度共情模式
         st.caption("🧠 v5.2增强版：记忆联想 + 深度情感理解 + 智能共情策略")
