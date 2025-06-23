@@ -229,9 +229,10 @@ input::placeholder, textarea::placeholder,
 
 /* 🎨 侧边栏 - 精致设计 */
 .stSidebar > div:first-child {
-    background: linear-gradient(180deg, #E6E6FA 0%, #F0E6FF 100%) !important;
-    border-right: 3px solid rgba(255, 122, 158, 0.2) !important;
-    box-shadow: 2px 0 15px rgba(255, 122, 158, 0.1) !important;
+    background: linear-gradient(180deg, #FFFBF5 0%, #FDF2F8 50%, #FCE7F3 100%) !important;
+    border-right: 3px solid rgba(255, 122, 158, 0.3) !important;
+    box-shadow: 2px 0 20px rgba(255, 122, 158, 0.15) !important;
+    backdrop-filter: blur(10px) !important;
 }
 
 .stSidebar .stMarkdown h1, .stSidebar .stMarkdown h2, .stSidebar .stMarkdown h3 {
@@ -402,6 +403,12 @@ input::placeholder, textarea::placeholder,
     border: 1px solid var(--border) !important;
     border-radius: 20px !important;
     box-shadow: 0 4px 15px var(--shadow) !important;
+    transition: all 0.3s ease !important;
+}
+
+.stAlert:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px var(--shadow) !important;
 }
 
 /* 🎨 加载状态颜色统一 */
@@ -498,20 +505,50 @@ input::placeholder, textarea::placeholder,
 
 /* 🎨 主标题动画 */
 .main-title {
-    animation: heartbeat 3s ease-in-out infinite;
+    animation: heartbeat 4s ease-in-out infinite;
+    background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent), var(--primary));
+    background-size: 300% 300%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: heartbeat 4s ease-in-out infinite, gradientShift 8s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
 }
 
 /* 🎨 聊天气泡微妙浮动 */
 .stChatMessage {
-    animation: float 4s ease-in-out infinite;
+    animation: float 6s ease-in-out infinite;
 }
 
 .stChatMessage:nth-child(even) {
-    animation-delay: 0.5s;
+    animation-delay: 1s;
+    animation-duration: 7s;
 }
 
 .stChatMessage:nth-child(odd) {
-    animation-delay: 1s;
+    animation-delay: 2s;
+    animation-duration: 5s;
+}
+
+/* 🎨 宝藏卡片浮动动画 */
+.treasure-card {
+    animation: float 8s ease-in-out infinite;
+}
+
+.treasure-card:nth-child(2n) {
+    animation-delay: 1.5s;
+}
+
+.treasure-card:nth-child(3n) {
+    animation-delay: 3s;
 }
 
 /* 🎨 聊天消息头像 - 超可爱设计 */
@@ -662,20 +699,24 @@ div[data-testid="stForm"] {
     z-index: 9999 !important;
     background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%) !important;
     color: white !important;
-    width: 50px !important;
-    height: 50px !important;
-    border-radius: 50% !important;
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 23px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 20px !important;
+    font-size: 16px !important;
     cursor: pointer !important;
     box-shadow:
-        0 4px 15px rgba(255, 122, 158, 0.3),
-        0 2px 8px rgba(255, 122, 158, 0.2) !important;
+        0 6px 20px rgba(255, 122, 158, 0.25),
+        0 3px 10px rgba(255, 122, 158, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    border: 3px solid rgba(255, 255, 255, 0.9) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
     user-select: none !important;
+    backdrop-filter: blur(10px) !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 600 !important;
 }
 
 .sidebar-toggle-btn:hover {
@@ -700,7 +741,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const toggleBtn = document.createElement('div');
         toggleBtn.className = 'sidebar-toggle-btn';
-        toggleBtn.innerHTML = '⚙️';
+        toggleBtn.innerHTML = '💖';
         toggleBtn.title = '打开/关闭设置面板';
 
         // 点击事件
@@ -717,14 +758,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     sidebarContent.style.width = '21rem';
                     sidebarContent.style.transform = 'translateX(0)';
                     toggleBtn.style.left = '240px';
-                    toggleBtn.innerHTML = '✖️';
+                    toggleBtn.innerHTML = '✨';
                 } else {
                     // 收起侧边栏
                     sidebar.setAttribute('aria-expanded', 'false');
                     sidebarContent.style.width = '0';
                     sidebarContent.style.transform = 'translateX(-100%)';
                     toggleBtn.style.left = '20px';
-                    toggleBtn.innerHTML = '⚙️';
+                    toggleBtn.innerHTML = '💖';
                 }
             }
         });
@@ -746,4 +787,114 @@ document.addEventListener('DOMContentLoaded', function() {
     createToggleButton();
 });
 </script>
+
+<style>
+/* 🎁 宝藏卡片样式 - 心动奶昔设计系统 */
+.treasure-card {
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 50%, var(--primary) 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    border-radius: 20px !important;
+    padding: 1.5rem !important;
+    margin: 0.8rem 0 !important;
+    text-align: center !important;
+    box-shadow:
+        0 8px 25px rgba(255, 122, 158, 0.15),
+        0 4px 12px rgba(255, 122, 158, 0.1),
+        inset 0 2px 4px rgba(255, 255, 255, 0.6) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.treasure-card::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    left: -50% !important;
+    width: 200% !important;
+    height: 200% !important;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent) !important;
+    transform: rotate(45deg) !important;
+    transition: all 0.6s ease !important;
+    opacity: 0 !important;
+}
+
+.treasure-card:hover {
+    transform: translateY(-8px) scale(1.02) !important;
+    box-shadow:
+        0 15px 35px rgba(255, 122, 158, 0.25),
+        0 8px 20px rgba(255, 122, 158, 0.15),
+        inset 0 2px 4px rgba(255, 255, 255, 0.8) !important;
+    border-color: rgba(255, 255, 255, 1) !important;
+}
+
+.treasure-card:hover::before {
+    opacity: 1 !important;
+    animation: shimmer 1.5s ease-in-out !important;
+}
+
+.treasure-card h4 {
+    margin: 0 0 0.8rem 0 !important;
+    color: var(--text) !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 1.1rem !important;
+    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8) !important;
+}
+
+.treasure-card p {
+    margin: 0.5rem 0 1rem 0 !important;
+    color: var(--text) !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-size: 0.9rem !important;
+    line-height: 1.4 !important;
+    opacity: 0.85 !important;
+}
+
+.treasure-detail-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 25px !important;
+    padding: 8px 20px !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(255, 122, 158, 0.3) !important;
+    border: 2px solid rgba(255, 255, 255, 0.6) !important;
+}
+
+.treasure-detail-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 18px rgba(255, 122, 158, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.treasure-detail-btn:active {
+    transform: translateY(0) !important;
+}
+
+/* 闪烁动画 */
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+/* 🎁 宝藏盒标题样式 */
+.treasure-box-title {
+    color: var(--primary) !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+    margin-bottom: 1.5rem !important;
+    text-shadow: 0 2px 4px rgba(255, 122, 158, 0.2) !important;
+}
+</style>
 """
