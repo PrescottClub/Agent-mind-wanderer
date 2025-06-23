@@ -19,6 +19,7 @@ from ..services.emotion_emergency_service import EmotionEmergencyService
 from ..services.care_scheduler_service import CareSchedulerService
 from ..services.emotion_analysis_service import EmotionAnalysisService
 from ..config.prompts import ENHANCED_MIND_SPRITE_PROMPT, SEARCH_ENHANCED_PROMPT
+from ..config.settings import settings
 
 
 class AIEngine:
@@ -39,13 +40,13 @@ class AIEngine:
             if not self.api_key:
                 raise ValueError("API Key未配置")
 
-            # 使用deepseek-chat模型 - 平衡速度和质量
+            # 使用deepseek-chat模型(V3) - 优化速度配置
             self.llm = ChatDeepSeek(
-                model="deepseek-chat",
+                model=settings.deepseek_model,  # V3模型，比R1快很多
                 api_key=SecretStr(self.api_key),
-                base_url="https://api.deepseek.com",
-                max_tokens=1024,
-                temperature=0.7
+                base_url=settings.deepseek_api_base,
+                max_tokens=settings.max_tokens,  # 优化速度的token设置
+                temperature=settings.temperature  # 优化速度的温度设置
             )
 
         except Exception as e:

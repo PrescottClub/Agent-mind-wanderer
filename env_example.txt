@@ -3,6 +3,7 @@
 
 # DeepSeek API 配置（必需）
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
+# 模型选择：deepseek-chat(V3,快速) 或 deepseek-reasoner(R1,推理强但慢)
 DEEPSEEK_MODEL=deepseek-chat
 DEEPSEEK_API_BASE=https://api.deepseek.com
 
@@ -14,4 +15,6 @@ SERPAPI_API_KEY=your_serpapi_key_here
 
 # 应用配置
 DEBUG_MODE=false
-MAX_TOKENS=1024 
+# 性能优化配置（数值越小速度越快）
+MAX_TOKENS=512
+TEMPERATURE=0.5

@@ -39,9 +39,13 @@ class Settings:
 
         # 设置默认配置（不包含API密钥，确保安全性）
         if not os.getenv('DEEPSEEK_MODEL'):
-            os.environ['DEEPSEEK_MODEL'] = 'deepseek-chat'  # 默认使用更快的chat模型
+            os.environ['DEEPSEEK_MODEL'] = 'deepseek-chat'  # V3模型，速度快，适合日常对话
         if not os.getenv('DEEPSEEK_API_BASE'):
             os.environ['DEEPSEEK_API_BASE'] = 'https://api.deepseek.com'
+        if not os.getenv('MAX_TOKENS'):
+            os.environ['MAX_TOKENS'] = '512'  # 优化速度的token设置
+        if not os.getenv('TEMPERATURE'):
+            os.environ['TEMPERATURE'] = '0.5'  # 优化速度的温度设置
 
     @property
     def deepseek_api_key(self) -> Optional[str]:
@@ -76,8 +80,13 @@ class Settings:
     @property
     def max_tokens(self) -> int:
         """AI模型最大token数"""
-        return int(os.getenv('MAX_TOKENS', '1024'))  # 减少token数量提升速度
+        return int(os.getenv('MAX_TOKENS', '512'))  # 优化速度的token设置
+
+    @property
+    def temperature(self) -> float:
+        """AI模型温度参数"""
+        return float(os.getenv('TEMPERATURE', '0.5'))  # 优化速度的温度设置
 
 
 # 全局设置实例
-settings = Settings() 
+settings = Settings()

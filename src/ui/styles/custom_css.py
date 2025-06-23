@@ -333,8 +333,8 @@ section:has([data-testid="stChatInput"]) {
     opacity: 1 !important;
 }
 
-/* 🎨 聊天输入框 - 精致设计 */
-.stChatInput {
+/* 🎨 聊天输入框容器 - 精致设计 */
+[data-testid="stChatInput"] {
     position: fixed !important;
     bottom: 20px !important;
     left: 50% !important;
@@ -348,27 +348,38 @@ section:has([data-testid="stChatInput"]) {
         0 10px 30px rgba(255, 122, 158, 0.15),
         0 4px 15px rgba(255, 122, 158, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
-    padding: 8px 12px !important;
+    padding: 8px 8px 8px 16px !important;
     margin: 0 !important;
     backdrop-filter: blur(15px) !important;
     border: 2px solid rgba(255, 122, 158, 0.3) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
 }
 
-.stChatInput > div {
+[data-testid="stChatInput"] > div {
     background: transparent !important;
     border: none !important;
     margin: 0 !important;
     padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    flex: 1 !important;
 }
 
-.stChatInput > div > div {
+[data-testid="stChatInput"] > div > div {
     background: transparent !important;
     border: none !important;
     margin: 0 !important;
     padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    flex: 1 !important;
 }
 
-.stChatInput > div > div > input {
+[data-testid="stChatInput"] input[type="text"] {
     background: rgba(255, 255, 255, 0.95) !important;
     border: 1px solid rgba(255, 122, 158, 0.25) !important;
     border-radius: 20px !important;
@@ -382,9 +393,13 @@ section:has([data-testid="stChatInput"]) {
     font-size: 1rem !important;
     width: 100% !important;
     font-weight: 500 !important;
+    flex: 1 !important;
+    margin: 0 !important;
+    height: 48px !important;
+    box-sizing: border-box !important;
 }
 
-.stChatInput > div > div > input:focus {
+[data-testid="stChatInput"] input[type="text"]:focus {
     border-color: var(--primary) !important;
     box-shadow:
         inset 0 2px 6px rgba(255, 122, 158, 0.1),
@@ -394,30 +409,36 @@ section:has([data-testid="stChatInput"]) {
     transform: translateY(-1px) !important;
 }
 
-.stChatInput > div > div > input::placeholder {
+[data-testid="stChatInput"] input[type="text"]::placeholder {
     color: rgba(255, 122, 158, 0.6) !important;
     font-style: normal !important;
     font-weight: 400 !important;
 }
 
 /* 🎨 聊天输入框发送按钮 - 可爱设计 */
-.stChatInput button {
+[data-testid="stChatInput"] button {
     background: linear-gradient(135deg, #FF7A9E 0%, #FF69B4 100%) !important;
     border: none !important;
     border-radius: 50% !important;
     color: white !important;
-    width: 44px !important;
-    height: 44px !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
     box-shadow:
         0 4px 15px rgba(255, 122, 158, 0.3),
         0 2px 8px rgba(255, 105, 180, 0.2) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    margin-left: 10px !important;
+    margin: 0 !important;
     position: relative !important;
     overflow: hidden !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
-.stChatInput button::before {
+[data-testid="stChatInput"] button::before {
     content: '💖' !important;
     position: absolute !important;
     top: 50% !important;
@@ -428,7 +449,7 @@ section:has([data-testid="stChatInput"]) {
     transition: opacity 0.3s ease !important;
 }
 
-.stChatInput button:hover {
+[data-testid="stChatInput"] button:hover {
     background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%) !important;
     box-shadow:
         0 6px 20px rgba(255, 122, 158, 0.4),
@@ -436,11 +457,11 @@ section:has([data-testid="stChatInput"]) {
     transform: translateY(-2px) scale(1.05) !important;
 }
 
-.stChatInput button:hover::before {
+[data-testid="stChatInput"] button:hover::before {
     opacity: 1 !important;
 }
 
-.stChatInput button:active {
+[data-testid="stChatInput"] button:active {
     transform: translateY(0) scale(0.98) !important;
 }
 

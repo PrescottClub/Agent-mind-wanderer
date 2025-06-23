@@ -12,6 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from src.data.repositories.user_profile_repository import UserProfileRepository
 from src.services.intimacy_service import IntimacyService
+from .model_config import render_model_config_panel, apply_model_config, show_current_model_status
 
 
 def render_sidebar() -> Optional[str]:
@@ -258,6 +259,11 @@ def render_sidebar() -> Optional[str]:
             </div>
             """, unsafe_allow_html=True)
         
+        # 【v6.0新增】模型配置部分
+        if api_configured:
+            st.markdown("---")
+            render_model_configuration()
+
         # 【v5.0新增】亲密度显示部分
         if api_configured:
             st.markdown("---")
@@ -269,6 +275,25 @@ def render_sidebar() -> Optional[str]:
             render_session_management()
 
         return st.session_state.deepseek_api_key if api_configured else None
+
+
+def render_model_configuration():
+    """渲染模型配置部分 - v6.0新增"""
+    st.markdown("### 🚀 模型配置")
+
+    # 显示当前模型状态
+    show_current_model_status()
+
+    # 模型配置面板
+    with st.expander("⚙️ 高级配置", expanded=False):
+        config = render_model_config_panel()
+
+        if st.button("✅ 应用配置", type="primary", use_container_width=True):
+            if apply_model_config(config):
+                st.success("🎉 配置已应用！重新发送消息即可生效")
+                st.rerun()
+            else:
+                st.error("❌ 配置应用失败")
 
 
 def render_intimacy_display():
