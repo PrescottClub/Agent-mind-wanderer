@@ -13,10 +13,11 @@ from langchain_deepseek import ChatDeepSeek
 from langchain_core.prompts import PromptTemplate
 from pydantic import SecretStr
 
-# 导入搜索服务、情绪急救包服务和关怀调度服务
+# 导入搜索服务、情绪急救包服务、关怀调度服务和情感分析服务
 from ..services.search_service import LocalMentalHealthSearchService, SearchTriggerDetector
 from ..services.emotion_emergency_service import EmotionEmergencyService
 from ..services.care_scheduler_service import CareSchedulerService
+from ..services.emotion_analysis_service import EmotionAnalysisService
 from ..config.prompts import ENHANCED_MIND_SPRITE_PROMPT, SEARCH_ENHANCED_PROMPT
 
 
@@ -29,6 +30,7 @@ class AIEngine:
         self.search_service = LocalMentalHealthSearchService(serp_api_key) if serp_api_key else None
         self.emotion_emergency_service = EmotionEmergencyService()
         self.care_scheduler_service = CareSchedulerService()
+        self.emotion_analysis_service = EmotionAnalysisService()
         self._initialize()
 
     def _initialize(self):
@@ -198,6 +200,184 @@ class AIEngine:
         except Exception as e:
             print(f"完成关怀任务失败: {e}")
             return False
+    
+    def analyze_user_emotion(self, user_input: str, session_id: str, message_id: int) -> Optional[Dict]:
+        """
+        分析用户输入的情感并生成深度共情回应
+        
+        Args:
+            user_input: 用户输入文本
+            session_id: 会话ID
+            message_id: 消息ID
+            
+        Returns:
+            包含情感分析结果和共情回应的字典
+        """
+        try:
+            # 进行情感分析
+            analysis_result = self.emotion_analysis_service.analyze_emotion(
+                user_input, session_id, message_id
+            )
+            
+            # 生成共情回应
+            empathy_response = self.emotion_analysis_service.generate_empathy_response(analysis_result)
+            
+            # 获取情感趋势信息
+            emotion_trends = self.emotion_analysis_service.get_emotion_trends(session_id)
+            
+            return {
+                "primary_emotion": analysis_result.primary_emotion.value,
+                "emotion_intensity": analysis_result.emotion_intensity,
+                "emotion_valence": analysis_result.emotion_valence,
+                "emotion_arousal": analysis_result.emotion_arousal,
+                "confidence_score": analysis_result.confidence_score,
+                "trigger_keywords": analysis_result.trigger_keywords,
+                "empathy_strategy": analysis_result.empathy_strategy.value,
+                "response_tone": analysis_result.response_tone.value,
+                "empathy_response": empathy_response,
+                "emotion_trends": emotion_trends
+            }
+            
+        except Exception as e:
+            print(f"情感分析失败: {e}")
+            return None
+    
+    def get_emotion_enhanced_response(self, user_input: str, chat_history: List[Tuple[str, str]],
+                                    core_memories: List[Tuple[str, str, str]], 
+                                    intimacy_level: int, total_interactions: int,
+                                    message_id: int, session_id: str) -> Optional[Dict]:
+        """
+        获取情感增强版AI回应 - 集成深度情感理解
+        
+        这是对原有get_enhanced_response的升级版本，增加了情感分析功能
+        """
+        if not self.llm:
+            st.warning("⚠️ AI模型未初始化，使用默认回应")
+            return self._get_fallback_response(user_input)
+
+        try:
+            # 🧠 第零优先级：进行深度情感分析
+            emotion_analysis = self.analyze_user_emotion(user_input, session_id, message_id)
+            
+            # 🚨 第一优先级：检测情绪急救需求
+            emotion_detection = self.emotion_emergency_service.detect_emotion(user_input)
+            if emotion_detection:
+                emergency_response = self._get_emergency_response(user_input, emotion_detection, chat_history)
+                # 将情感分析结果融入急救回应
+                if emotion_analysis:
+                    emergency_response["emotion_analysis"] = emotion_analysis
+                return emergency_response
+            
+            # 检查是否需要搜索
+            search_results = None
+            if self.search_service:
+                search_intent = SearchTriggerDetector.detect_search_intent(user_input)
+                
+                if search_intent["intent"] == "local_mental_health":
+                    with st.spinner("🔍 小念正在搜索本地心理健康资源..."):
+                        search_results = self.search_service.search_local_resources(user_input)
+                        
+                        if search_results["success"]:
+                            st.success(f"✅ 已找到{search_results['location']}的心理健康资源")
+                        else:
+                            st.warning(f"⚠️ 搜索遇到问题: {search_results.get('message', '未知错误')}")
+
+            # 如果是搜索请求，使用搜索模板
+            if search_results and search_results["success"]:
+                search_response = self._get_search_enhanced_response(user_input, search_results)
+                if emotion_analysis:
+                    search_response["emotion_analysis"] = emotion_analysis
+                return search_response
+
+            # 使用增强版记忆联想模板，融入情感分析
+            recent_moods = self._analyze_recent_mood_patterns(chat_history)
+            chat_history_text = self._format_chat_history_for_memory(chat_history)
+            core_memories_text = self._format_core_memories_for_memory(core_memories)
+            
+            # 如果有情感分析结果，将其融入提示词
+            emotion_context = ""
+            if emotion_analysis:
+                emotion_context = f"""
+【深度情感洞察】
+- 主要情绪: {emotion_analysis['primary_emotion']} (强度: {emotion_analysis['emotion_intensity']:.1f}/10)
+- 情感效价: {emotion_analysis['emotion_valence']:.2f} (负面←→正面)
+- 情感唤醒: {emotion_analysis['emotion_arousal']:.2f} (平静←→激动)
+- 建议策略: {emotion_analysis['empathy_strategy']}
+- 语调建议: {emotion_analysis['response_tone']}
+- 触发词汇: {', '.join(emotion_analysis['trigger_keywords'])}
+- 置信度: {emotion_analysis['confidence_score']:.2f}
+"""
+            
+            # 使用增强版提示词模板
+            enhanced_prompt = ENHANCED_MIND_SPRITE_PROMPT + emotion_context + """
+
+请根据以上情感分析洞察，调整你的回应风格和内容，让回应更贴合用户的真实情感状态。"""
+            
+            prompt = PromptTemplate(
+                input_variables=["user_input", "chat_history", "core_memories", 
+                               "intimacy_level", "total_interactions", "recent_moods"],
+                template=enhanced_prompt
+            )
+            
+            response = prompt | self.llm
+            final_response = response.invoke({
+                "user_input": user_input,
+                "chat_history": chat_history_text,
+                "core_memories": core_memories_text,
+                "intimacy_level": intimacy_level,
+                "total_interactions": total_interactions,
+                "recent_moods": recent_moods
+            })
+
+            # 获取回应内容
+            if hasattr(final_response, 'content'):
+                final_content = str(final_response.content)
+            else:
+                final_content = str(final_response)
+
+            # 解析JSON回应
+            try:
+                response_data = json.loads(final_content)
+                
+                # 验证必要字段
+                required_fields = ["mood_category", "sprite_reaction", "gift_type", "gift_content"]
+                for field in required_fields:
+                    if field not in response_data:
+                        raise ValueError(f"缺少必要字段: {field}")
+                
+                # 确保字段存在
+                if "memory_association" not in response_data:
+                    response_data["memory_association"] = None
+                if "emotional_resonance" not in response_data:
+                    response_data["emotional_resonance"] = "小念感受到了你内心的温暖波动"
+                
+                # 融入情感分析结果
+                if emotion_analysis:
+                    response_data["emotion_analysis"] = emotion_analysis
+                    response_data["is_emotion_enhanced"] = True
+                
+                return response_data
+                
+            except json.JSONDecodeError as e:
+                st.error(f"JSON解析错误: {e}")
+                st.code(final_content)
+                # 返回降级回应，但包含情感分析
+                fallback_response = self._get_fallback_response(user_input)
+                if emotion_analysis:
+                    fallback_response["emotion_analysis"] = emotion_analysis
+                return fallback_response
+
+        except Exception as e:
+            st.error(f"AI分析出错: {e}")
+            fallback_response = self._get_fallback_response(user_input)
+            # 即使出错也尝试提供情感分析
+            try:
+                emotion_analysis = self.analyze_user_emotion(user_input, session_id, message_id)
+                if emotion_analysis:
+                    fallback_response["emotion_analysis"] = emotion_analysis
+            except:
+                pass
+            return fallback_response
 
     def _analyze_recent_mood_patterns(self, chat_history: List[Tuple[str, str]]) -> str:
         """分析最近的情绪模式"""

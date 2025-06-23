@@ -142,8 +142,8 @@ class MindSpriteApp:
         """处理用户输入 - 使用增强版记忆联想功能"""
         session_id = self.session_manager.session_id
 
-        # 保存用户消息
-        self.chat_repo.add_message(session_id, "user", user_input)
+        # 保存用户消息并获取消息ID
+        message_id = self.chat_repo.add_message(session_id, "user", user_input)
 
         # 获取上下文信息
         core_memories = self.chat_repo.get_core_memories(session_id, limit=5)
@@ -157,14 +157,15 @@ class MindSpriteApp:
         intimacy_level = profile["intimacy_level"]
         total_interactions = profile["total_interactions"]
 
-        # 获取增强版AI回应
+        # 【v5.2新增】获取情感增强版AI回应 - 集成深度情感理解
         if not self.ai_engine:
             st.error("AI引擎未初始化")
             return
             
-        with st.spinner("✨ 小念正在回忆和思考中..."):
-            response_data = self.ai_engine.get_enhanced_response(
-                user_input, recent_context, core_memories, intimacy_level, total_interactions
+        with st.spinner("✨ 小念正在深度感知你的情绪..."):
+            response_data = self.ai_engine.get_emotion_enhanced_response(
+                user_input, recent_context, core_memories, intimacy_level, total_interactions,
+                message_id, session_id
             )
 
         if not response_data:
@@ -185,8 +186,41 @@ class MindSpriteApp:
         # 检查是否为急救包回应
         is_emergency = parsed_response.get("is_emergency", False)
         
+        # 【v5.2新增】检查是否有情感分析结果
+        emotion_analysis = response_data.get("emotion_analysis")
+        is_emotion_enhanced = response_data.get("is_emotion_enhanced", False)
+        
         # 显示回应
         with st.chat_message("assistant"):
+            # 【v5.2新增】显示情感洞察（如果有深度情感分析）
+            if is_emotion_enhanced and emotion_analysis:
+                st.markdown("### 🧠 深度情感洞察")
+                
+                # 情感分析概览
+                primary_emotion = emotion_analysis["primary_emotion"]
+                intensity = emotion_analysis["emotion_intensity"]
+                valence = emotion_analysis["emotion_valence"]
+                empathy_strategy = emotion_analysis["empathy_strategy"]
+                
+                # 情绪强度条
+                intensity_color = "🔴" if intensity > 7 else "🟡" if intensity > 4 else "🟢"
+                st.markdown(f"💫 **主要情绪**: {primary_emotion} {intensity_color} ({intensity:.1f}/10)")
+                
+                # 情感效价指示
+                valence_emoji = "😊" if valence > 0.3 else "😔" if valence < -0.3 else "😐"
+                st.markdown(f"🎭 **情感倾向**: {valence_emoji} ({valence:.2f})")
+                
+                # 共情策略
+                strategy_emoji = {"comfort": "🤗", "solution": "💡", "companion": "🫶", 
+                                "celebration": "🎉", "validation": "✅"}.get(empathy_strategy, "💝")
+                st.markdown(f"🎯 **关怀策略**: {strategy_emoji} {empathy_strategy}")
+                
+                # 共情回应
+                if "empathy_response" in emotion_analysis:
+                    st.info(f"💙 {emotion_analysis['empathy_response']}")
+                
+                st.markdown("---")
+            
             if is_emergency:
                 # 【急救包特殊显示】
                 st.markdown("### 🚨 情绪关怀模式")
@@ -425,8 +459,8 @@ class MindSpriteApp:
         # 渲染聊天历史
         self.render_chat_history()
         
-        # 【v5.1】增强版记忆联想模式
-        st.caption("🧠 增强版模式：记忆联想 + 深度情绪共鸣")
+        # 【v5.2】智能情感分析与深度共情模式
+        st.caption("🧠 v5.2增强版：记忆联想 + 深度情感理解 + 智能共情策略")
 
         # 处理用户输入
         if user_input := st.chat_input("和小念分享你的心情吧~ 💭"):

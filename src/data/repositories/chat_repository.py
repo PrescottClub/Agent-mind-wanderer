@@ -12,14 +12,27 @@ from .base_repository import BaseRepository
 class ChatRepository(BaseRepository):
     """聊天记录仓库类"""
     
-    def add_message(self, session_id: str, role: str, content: str) -> bool:
-        """添加聊天消息"""
-        query = '''
-            INSERT INTO chat_history (session_id, role, content, timestamp)
-            VALUES (?, ?, ?, ?)
-        '''
-        params = (session_id, role, content, datetime.now())
-        return self.execute_insert(query, params)
+    def add_message(self, session_id: str, role: str, content: str) -> Optional[int]:
+        """添加聊天消息，返回消息ID"""
+        try:
+            conn = self.get_connection()
+            if not conn:
+                return None
+            
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO chat_history (session_id, role, content, timestamp)
+                VALUES (?, ?, ?, ?)
+            ''', (session_id, role, content, datetime.now()))
+            
+            message_id = cursor.lastrowid
+            conn.commit()
+            conn.close()
+            return message_id
+            
+        except Exception as e:
+            print(f"添加消息失败: {e}")
+            return None
     
     def get_history(self, session_id: str, limit: int = 20) -> List[Tuple[str, str, str]]:
         """获取聊天历史"""
