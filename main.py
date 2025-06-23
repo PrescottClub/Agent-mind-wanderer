@@ -27,6 +27,7 @@ from src.utils.helpers import (
     check_first_visit_today,
     generate_proactive_greeting,
     parse_ai_response,
+    parse_enhanced_ai_response,
     extract_gift_from_response
 )
 
@@ -170,6 +171,107 @@ class MindSpriteApp:
         # 刷新页面以显示新消息
         st.rerun()
     
+    def handle_enhanced_user_input(self, user_input: str):
+        """处理用户输入 - 使用增强版记忆联想功能"""
+        session_id = self.session_manager.session_id
+
+        # 保存用户消息
+        self.chat_repo.add_message(session_id, "user", user_input)
+
+        # 获取上下文信息
+        core_memories = self.chat_repo.get_core_memories(session_id, limit=5)
+        recent_context = self.chat_repo.get_recent_context(session_id, context_turns=4)
+
+        # 【增强版新增】获取亲密度信息
+        profile = self.user_profile_repo.get_profile(session_id)
+        if not profile:
+            profile = self.user_profile_repo.find_or_create_profile(session_id)
+        
+        intimacy_level = profile["intimacy_level"]
+        total_interactions = profile["total_interactions"]
+
+        # 获取增强版AI回应
+        if not self.ai_engine:
+            st.error("AI引擎未初始化")
+            return
+            
+        with st.spinner("✨ 小念正在回忆和思考中..."):
+            response_data = self.ai_engine.get_enhanced_response(
+                user_input, recent_context, core_memories, intimacy_level, total_interactions
+            )
+
+        if not response_data:
+            st.error("获取AI回应失败")
+            return
+
+        # 解析增强版回应
+        parsed_response = parse_enhanced_ai_response(response_data)
+
+        # 构建完整的回应文本用于保存
+        full_response = parsed_response["sprite_reaction"]
+        if parsed_response["memory_association"]:
+            full_response = f"💭 记忆联想: {parsed_response['memory_association']}\n\n{full_response}"
+
+        # 保存AI回应
+        self.chat_repo.add_message(session_id, "assistant", full_response)
+
+        # 显示增强版回应
+        with st.chat_message("assistant"):
+            # 显示记忆联想（如果有）
+            if parsed_response["memory_association"]:
+                st.markdown("### 💭 记忆联想")
+                st.info(f"🌟 {parsed_response['memory_association']}")
+                st.markdown("---")
+            
+            # 显示情绪共鸣
+            st.markdown("### 💕 情感共鸣")
+            st.markdown(f"🫶 {parsed_response['emotional_resonance']}")
+            st.markdown("---")
+            
+            # 显示主要回应
+            st.markdown(f"💖 {parsed_response['sprite_reaction']}")
+
+        # 处理礼物
+        gift_info = {
+            "type": parsed_response["gift_type"],
+            "content": parsed_response["gift_content"]
+        }
+        
+        if gift_info["type"]:
+            st.session_state.current_gift = gift_info
+            self.chat_repo.add_treasure(
+                session_id, gift_info["type"], gift_info["content"]
+            )
+            
+            # 显示礼物
+            st.markdown("### 🎁 小念的礼物")
+            st.success(f"**{gift_info['type']}**\n\n{gift_info['content']}")
+
+        # 【v5.0新增】添加经验值和处理升级
+        exp_result = self.intimacy_service.add_exp(session_id, exp_to_add=15)  # 增强版多5exp
+
+        # 检查是否升级
+        if exp_result["leveled_up"]:
+            # 升级庆祝效果
+            st.balloons()
+
+            # 升级提示
+            new_level = exp_result["new_level"]
+            st.toast(f"🎉 恭喜！与小念的羁绊提升到 Lv.{new_level} 啦！", icon="🎉")
+
+            # 显示升级奖励
+            if exp_result["level_rewards"]:
+                st.success("🎁 解锁新奖励：")
+                for reward in exp_result["level_rewards"]:
+                    st.info(f"✨ {reward['content']}")
+
+        # 显示经验值获得提示（小字提示）
+        exp_gained = exp_result["exp_gained"]
+        st.caption(f"💫 获得 {exp_gained} EXP！（增强版记忆联想奖励）")
+
+        # 刷新页面以显示新消息
+        st.rerun()
+    
     def render_treasure_box(self):
         """渲染宝藏盒"""
         session_id = self.session_manager.session_id
@@ -298,9 +400,27 @@ class MindSpriteApp:
         # 渲染聊天历史
         self.render_chat_history()
         
+        # 【v5.1 增强版选择】增强版记忆联想模式切换
+        col1, col2 = st.columns([4, 1])
+        
+        with col2:
+            enhanced_mode = st.toggle(
+                "✨ 增强版", 
+                value=st.session_state.get('enhanced_mode', True),
+                help="启用记忆联想和情绪共鸣增强功能"
+            )
+            st.session_state.enhanced_mode = enhanced_mode
+        
+        with col1:
+            mode_info = "🧠 增强版模式：记忆联想 + 深度情绪共鸣" if enhanced_mode else "🌸 经典模式：温暖治愈对话"
+            st.caption(mode_info)
+
         # 处理用户输入
         if user_input := st.chat_input("和小念分享你的心情吧~ 💭"):
-            self.handle_user_input(user_input)
+            if enhanced_mode:
+                self.handle_enhanced_user_input(user_input)
+            else:
+                self.handle_user_input(user_input)
         
         # 渲染宝藏盒
         self.render_treasure_box()

@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Dict, List
 import sys
 import os
+import json
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.data.repositories.chat_repository import ChatRepository
@@ -119,6 +120,34 @@ def generate_proactive_greeting() -> str:
         return random.choice(weekend_greetings)
 
     return random.choice(greetings.get(time_of_day, greetings["早晨"]))
+
+
+def parse_enhanced_ai_response(response_data: Dict) -> Dict:
+    """
+    解析增强版AI回应的JSON格式
+    返回包含所有必要信息的字典
+    """
+    try:
+        return {
+            "mood_category": response_data.get("mood_category", "温暖"),
+            "memory_association": response_data.get("memory_association"),
+            "sprite_reaction": response_data.get("sprite_reaction", "小念想和你分享温暖~"),
+            "emotional_resonance": response_data.get("emotional_resonance", "温暖的情感共鸣"),
+            "gift_type": response_data.get("gift_type", "元气咒语"),
+            "gift_content": response_data.get("gift_content", "小念的温暖陪伴~"),
+            "search_summary": response_data.get("search_summary")  # 搜索结果时才有
+        }
+    except Exception as e:
+        # 如果解析失败，返回降级版本
+        return {
+            "mood_category": "温暖",
+            "memory_association": None,
+            "sprite_reaction": "呜呜~ 小念有点困惑，但还是想陪伴你~",
+            "emotional_resonance": "即使在困难时刻，陪伴依然珍贵",
+            "gift_type": "元气咒语",
+            "gift_content": "✨ 愿我们的友谊永远温暖如初 ✨",
+            "search_summary": None
+        }
 
 
 def parse_ai_response(response_text: str) -> Dict:

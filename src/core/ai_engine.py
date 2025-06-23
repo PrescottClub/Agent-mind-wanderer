@@ -8,13 +8,14 @@ import json
 import os
 import hashlib
 from datetime import datetime
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 from langchain_deepseek import ChatDeepSeek
 from langchain_core.prompts import PromptTemplate
 from pydantic import SecretStr
 
 # 导入搜索服务
 from ..services.search_service import LocalMentalHealthSearchService, SearchTriggerDetector
+from ..config.prompts import ENHANCED_MIND_SPRITE_PROMPT, SEARCH_ENHANCED_PROMPT
 
 
 class AIEngine:
@@ -44,6 +45,225 @@ class AIEngine:
         except Exception as e:
             st.error(f"❌ API Key无效或网络错误，请检查你的Key后重试: {e}")
             self.llm = None
+
+    def get_enhanced_response(self, user_input: str, chat_history: List[Tuple[str, str]],
+                             core_memories: List[Tuple[str, str, str]], 
+                             intimacy_level: int, total_interactions: int) -> Optional[Dict]:
+        """获取增强版AI回应 - 支持记忆联想和情绪共鸣"""
+        if not self.llm:
+            st.warning("⚠️ AI模型未初始化，使用默认回应")
+            return {
+                "mood_category": "温暖",
+                "memory_association": None,
+                "sprite_reaction": "🧠 检测到系统问题，但小念还是想陪伴你~ ⚙️ 💖 虽然遇到了一些技术困难，但小念的心意是真诚的！愿你今天充满阳光！☀️",
+                "emotional_resonance": "即使在困难时刻，温暖的陪伴也是最珍贵的礼物",
+                "gift_type": "元气咒语",
+                "gift_content": "✨ 即使系统遇到问题，我们的友谊依然坚固如山！相信一切都会好起来的！✨"
+            }
+
+        try:
+            # 检查是否需要搜索
+            search_results = None
+            if self.search_service:
+                search_intent = SearchTriggerDetector.detect_search_intent(user_input)
+                
+                if search_intent["intent"] == "local_mental_health":
+                    # 显示搜索指示器
+                    with st.spinner("🔍 小念正在搜索本地心理健康资源..."):
+                        search_results = self.search_service.search_local_resources(user_input)
+                        
+                        # 显示搜索状态
+                        if search_results["success"]:
+                            st.success(f"✅ 已找到{search_results['location']}的心理健康资源")
+                        else:
+                            st.warning(f"⚠️ 搜索遇到问题: {search_results.get('message', '未知错误')}")
+
+            # 如果是搜索请求，使用搜索模板
+            if search_results and search_results["success"]:
+                return self._get_search_enhanced_response(user_input, search_results)
+
+            # 否则使用增强版记忆联想模板
+            # 分析情绪模式
+            recent_moods = self._analyze_recent_mood_patterns(chat_history)
+            
+            # 格式化记忆和上下文
+            chat_history_text = self._format_chat_history_for_memory(chat_history)
+            core_memories_text = self._format_core_memories_for_memory(core_memories)
+            
+            # 使用增强版提示词模板
+            prompt = PromptTemplate(
+                input_variables=["user_input", "chat_history", "core_memories", 
+                               "intimacy_level", "total_interactions", "recent_moods"],
+                template=ENHANCED_MIND_SPRITE_PROMPT
+            )
+            
+            response = prompt | self.llm
+            final_response = response.invoke({
+                "user_input": user_input,
+                "chat_history": chat_history_text,
+                "core_memories": core_memories_text,
+                "intimacy_level": intimacy_level,
+                "total_interactions": total_interactions,
+                "recent_moods": recent_moods
+            })
+
+            # 获取回应内容
+            if hasattr(final_response, 'content'):
+                final_content = str(final_response.content)
+            else:
+                final_content = str(final_response)
+
+            # 解析JSON回应
+            try:
+                response_data = json.loads(final_content)
+                
+                # 验证必要字段
+                required_fields = ["mood_category", "sprite_reaction", "gift_type", "gift_content"]
+                for field in required_fields:
+                    if field not in response_data:
+                        raise ValueError(f"缺少必要字段: {field}")
+                
+                # 确保memory_association和emotional_resonance字段存在
+                if "memory_association" not in response_data:
+                    response_data["memory_association"] = None
+                if "emotional_resonance" not in response_data:
+                    response_data["emotional_resonance"] = "小念感受到了你内心的温暖波动"
+                
+                return response_data
+                
+            except json.JSONDecodeError as e:
+                st.error(f"JSON解析错误: {e}")
+                st.code(final_content)
+                # 返回降级回应
+                return self._get_fallback_response(user_input)
+
+        except Exception as e:
+            st.error(f"AI分析出错: {e}")
+            return self._get_fallback_response(user_input)
+
+    def _analyze_recent_mood_patterns(self, chat_history: List[Tuple[str, str]]) -> str:
+        """分析最近的情绪模式"""
+        if not chat_history:
+            return "这是我们第一次对话，小念很期待了解你的心情~"
+        
+        # 简单的情绪关键词检测
+        positive_keywords = ["开心", "高兴", "快乐", "兴奋", "满足", "感激", "温暖", "舒适"]
+        negative_keywords = ["难过", "沮丧", "焦虑", "担心", "疲惫", "压力", "困惑", "孤单"]
+        neutral_keywords = ["平静", "一般", "还好", "正常", "想想"]
+        
+        recent_messages = chat_history[-6:]  # 分析最近3轮对话
+        mood_counts = {"positive": 0, "negative": 0, "neutral": 0}
+        
+        for role, content in recent_messages:
+            if role == "user":
+                content_lower = content.lower()
+                if any(keyword in content_lower for keyword in positive_keywords):
+                    mood_counts["positive"] += 1
+                elif any(keyword in content_lower for keyword in negative_keywords):
+                    mood_counts["negative"] += 1
+                elif any(keyword in content_lower for keyword in neutral_keywords):
+                    mood_counts["neutral"] += 1
+        
+        # 生成模式描述
+        if mood_counts["positive"] > mood_counts["negative"]:
+            return "最近你的情绪偏向积极正面，小念感到很温暖~"
+        elif mood_counts["negative"] > mood_counts["positive"]:
+            return "最近你似乎在经历一些挑战，小念想给你更多关怀"
+        else:
+            return "你的情绪比较平稳，小念陪你一起感受生活的起起伏伏"
+
+    def _format_chat_history_for_memory(self, chat_history: List[Tuple[str, str]]) -> str:
+        """为记忆联想格式化聊天历史"""
+        if not chat_history:
+            return "这是我们美好对话的开始~"
+
+        # 只取最近的几轮对话，避免太长
+        recent_history = chat_history[-8:]  # 最近4轮对话
+        history_lines = []
+        
+        for role, content in recent_history:
+            if role == "user":
+                # 截断过长的内容
+                display_content = content[:100] + "..." if len(content) > 100 else content
+                history_lines.append(f"你说: {display_content}")
+            else:
+                # 对AI回应进行简化，只提取核心情感
+                display_content = content[:50] + "..." if len(content) > 50 else content
+                history_lines.append(f"小念回应: {display_content}")
+
+        return "\n".join(history_lines)
+
+    def _format_core_memories_for_memory(self, core_memories: List[Tuple[str, str, str]]) -> str:
+        """为记忆联想格式化核心记忆"""
+        if not core_memories:
+            return "小念期待了解更多关于你的美好记忆~"
+
+        memory_type_names = {
+            'insight': '你的感悟',
+            'event': '重要时刻',
+            'person': '重要的人',
+            'preference': '你的喜好'
+        }
+
+        memory_lines = []
+        for memory_type, content, timestamp in core_memories:
+            type_name = memory_type_names.get(memory_type, memory_type)
+            memory_lines.append(f"[{type_name}] {content}")
+
+        return "\n".join(memory_lines)
+
+    def _get_search_enhanced_response(self, user_input: str, search_results: Dict) -> Dict:
+        """处理搜索增强的回应"""
+        try:
+            # 使用搜索增强模板
+            if self.search_service:
+                search_context = self.search_service.format_search_results_for_ai(search_results)
+            else:
+                search_context = str(search_results)
+            
+            prompt = PromptTemplate(
+                input_variables=["user_input", "search_results"],
+                template=SEARCH_ENHANCED_PROMPT
+            )
+            
+            if self.llm:
+                response = prompt | self.llm
+                final_response = response.invoke({
+                    "user_input": user_input,
+                    "search_results": search_context
+                })
+            else:
+                return self._get_fallback_response(user_input)
+
+            # 获取回应内容
+            if hasattr(final_response, 'content'):
+                final_content = str(final_response.content)
+            else:
+                final_content = str(final_response)
+
+            # 解析JSON回应
+            response_data = json.loads(final_content)
+            
+            # 确保字段完整性
+            if "search_summary" not in response_data:
+                response_data["search_summary"] = "小念为你找到了一些心理健康资源~"
+            
+            return response_data
+            
+        except Exception as e:
+            st.error(f"搜索回应生成出错: {e}")
+            return self._get_fallback_response(user_input)
+
+    def _get_fallback_response(self, user_input: str) -> Dict:
+        """降级回应 - 当AI无法正常工作时使用"""
+        return {
+            "mood_category": "温暖",
+            "memory_association": None,
+            "sprite_reaction": f"呜呜~ 小念遇到了一些技术困难，但还是想陪伴你~ (｡•́︿•̀｡) 不过小念能感受到你想要分享的心情，谢谢你愿意和小念说话呢！",
+            "emotional_resonance": "即使在困难时刻，陪伴的温暖依然珍贵",
+            "gift_type": "元气咒语",
+            "gift_content": "✨ 愿技术的小故障也无法阻挡我们心灵的连接，相信一切都会好起来的！✨"
+        }
 
     def get_response(self, user_input: str, chat_history: List[Tuple[str, str]],
                      core_memories: List[Tuple[str, str, str]], env_context: dict,
