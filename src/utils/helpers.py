@@ -135,7 +135,8 @@ def parse_enhanced_ai_response(response_data: Dict) -> Dict:
             "emotional_resonance": response_data.get("emotional_resonance", "温暖的情感共鸣"),
             "gift_type": response_data.get("gift_type", "元气咒语"),
             "gift_content": response_data.get("gift_content", "小念的温暖陪伴~"),
-            "search_summary": response_data.get("search_summary")  # 搜索结果时才有
+            "search_summary": response_data.get("search_summary"),  # 搜索结果时才有
+            "is_emergency": response_data.get("is_emergency", False)  # 急救包模式标识
         }
     except Exception as e:
         # 如果解析失败，返回降级版本
@@ -146,7 +147,8 @@ def parse_enhanced_ai_response(response_data: Dict) -> Dict:
             "emotional_resonance": "即使在困难时刻，陪伴依然珍贵",
             "gift_type": "元气咒语",
             "gift_content": "✨ 愿我们的友谊永远温暖如初 ✨",
-            "search_summary": None
+            "search_summary": None,
+            "is_emergency": False
         }
 
 

@@ -82,14 +82,16 @@ class MindSpriteApp:
                     with st.chat_message("assistant"):
                         st.markdown("### 💝 小念想起")
                         st.info("小念一直记挂着你呢~")
-                        st.markdown(f"💖 {care_task['care_message']}")
+                        st.markdown(f"💖 {care_task.get('care_message', '小念想起你了~')}")
                     
                     # 保存关怀消息到聊天历史
-                    care_response = f"💝 小念想起: {care_task['care_message']}"
+                    care_response = f"💝 小念想起: {care_task.get('care_message', '小念想起你了~')}"
                     self.chat_repo.add_message(session_id, "assistant", care_response)
                     
                     # 标记关怀任务为已完成
-                    self.ai_engine.complete_care_task(care_task['id'])
+                    task_id = care_task.get('id')
+                    if task_id:
+                        self.ai_engine.complete_care_task(task_id)
                     
                     # 标记已显示，避免重复
                     st.session_state.care_task_shown = True
@@ -144,6 +146,9 @@ class MindSpriteApp:
 
         # 保存用户消息并获取消息ID
         message_id = self.chat_repo.add_message(session_id, "user", user_input)
+        if message_id is None:
+            st.error("保存消息失败")
+            return
 
         # 获取上下文信息
         core_memories = self.chat_repo.get_core_memories(session_id, limit=5)
@@ -177,8 +182,9 @@ class MindSpriteApp:
 
         # 构建完整的回应文本用于保存
         full_response = parsed_response["sprite_reaction"]
-        if parsed_response["memory_association"]:
-            full_response = f"💭 记忆联想: {parsed_response['memory_association']}\n\n{full_response}"
+        memory_association = parsed_response["memory_association"]
+        if memory_association and memory_association != "null" and memory_association.strip():
+            full_response = f"💭 记忆联想: {memory_association}\n\n{full_response}"
 
         # 保存AI回应
         self.chat_repo.add_message(session_id, "assistant", full_response)
@@ -232,14 +238,16 @@ class MindSpriteApp:
                 st.markdown(f"🫂 {parsed_response['emotional_resonance']}")
                 st.markdown("---")
                 
-                # 显示主要回应
-                st.markdown(f"💖 {parsed_response['sprite_reaction']}")
+                # 显示主要回应 - 转义波浪号防止删除线渲染
+                sprite_reaction = parsed_response['sprite_reaction'].replace('~~', '\\~\\~')
+                st.markdown(f"💖 {sprite_reaction}")
             else:
                 # 【普通增强版回应】
                 # 显示记忆联想（如果有）
-                if parsed_response["memory_association"]:
+                memory_association = parsed_response["memory_association"]
+                if memory_association and memory_association != "null" and memory_association.strip():
                     st.markdown("### 💭 记忆联想")
-                    st.info(f"🌟 {parsed_response['memory_association']}")
+                    st.info(f"🌟 {memory_association}")
                     st.markdown("---")
                 
                 # 显示情绪共鸣
@@ -247,8 +255,9 @@ class MindSpriteApp:
                 st.markdown(f"🫶 {parsed_response['emotional_resonance']}")
                 st.markdown("---")
                 
-                # 显示主要回应
-                st.markdown(f"💖 {parsed_response['sprite_reaction']}")
+                # 显示主要回应 - 转义波浪号防止删除线渲染
+                sprite_reaction = parsed_response['sprite_reaction'].replace('~~', '\\~\\~')
+                st.markdown(f"💖 {sprite_reaction}")
 
         # 处理礼物
         gift_info = {
@@ -323,7 +332,13 @@ class MindSpriteApp:
                         "regular_care": "定期关怀"
                     }
                     type_name = care_type_names.get(task['care_type'], task['care_type'])
-                    st.caption(f"💝 小念已为你安排 {type_name} （{task['scheduled_time'][:16]}）")
+                    # 安全地处理时间显示
+                    scheduled_time = task.get('scheduled_time', '')
+                    if isinstance(scheduled_time, str) and len(scheduled_time) >= 16:
+                        time_display = scheduled_time[:16]
+                    else:
+                        time_display = str(scheduled_time)
+                    st.caption(f"💝 小念已为你安排 {type_name} （{time_display}）")
         except Exception as e:
             # 静默处理关怀任务错误，不影响主流程
             print(f"关怀任务处理错误: {e}")
