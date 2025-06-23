@@ -182,29 +182,41 @@ def render_sidebar() -> Optional[str]:
         </div>
         """, unsafe_allow_html=True)
         
-        # API密钥输入框 - 增强样式
-        st.markdown("##### 🗝️ 请输入你的 DeepSeek API Key")
-        user_api_key = st.text_input(
-            "API密钥",
-            type="password",
-            placeholder="sk-xxxxxxxxxxxxxxxxxxxx",
-            help="请在此输入你的DeepSeek API密钥",
-            label_visibility="collapsed"
-        )
-        
-        # 检查API密钥状态并显示相应的卡片
-        if user_api_key and user_api_key.strip():
-            st.session_state.deepseek_api_key = user_api_key.strip()
+        # 优先从 Streamlit Secrets 获取 API 密钥
+        api_key_from_secrets = None
+        try:
+            api_key_from_secrets = st.secrets.get("DEEPSEEK_API_KEY")
+        except:
+            pass
+
+        # 如果没有从 secrets 获取到，尝试从环境变量获取
+        if not api_key_from_secrets:
+            api_key_from_secrets = os.getenv("DEEPSEEK_API_KEY")
+
+        # 如果从 secrets 或环境变量获取到了密钥
+        if api_key_from_secrets:
+            st.session_state.deepseek_api_key = api_key_from_secrets
             st.markdown("""
             <div class="api-status-card api-status-success">
-                <h4>✅ API密钥已配置</h4>
+                <h4>✅ API密钥已配置 (来自配置文件)</h4>
                 <p>心绪精灵小念已准备好为你服务！</p>
             </div>
             """, unsafe_allow_html=True)
             api_configured = True
         else:
-            # 检查session state中是否有密钥
-            if hasattr(st.session_state, 'deepseek_api_key') and st.session_state.deepseek_api_key:
+            # 如果没有从配置获取到，显示输入框
+            st.markdown("##### 🗝️ 请输入你的 DeepSeek API Key")
+            user_api_key = st.text_input(
+                "API密钥",
+                type="password",
+                placeholder="sk-xxxxxxxxxxxxxxxxxxxx",
+                help="请在此输入你的DeepSeek API密钥",
+                label_visibility="collapsed"
+            )
+
+            # 检查用户输入的API密钥
+            if user_api_key and user_api_key.strip():
+                st.session_state.deepseek_api_key = user_api_key.strip()
                 st.markdown("""
                 <div class="api-status-card api-status-success">
                     <h4>✅ API密钥已配置</h4>
@@ -213,33 +225,59 @@ def render_sidebar() -> Optional[str]:
                 """, unsafe_allow_html=True)
                 api_configured = True
             else:
-                st.markdown("""
-                <div class="api-status-card api-status-warning">
-                    <h4>⚠️ 需要配置API密钥</h4>
-                    <p>请输入你的API密钥来开始使用</p>
-                </div>
-                """, unsafe_allow_html=True)
-                api_configured = False
+                # 检查session state中是否有密钥
+                if hasattr(st.session_state, 'deepseek_api_key') and st.session_state.deepseek_api_key:
+                    st.markdown("""
+                    <div class="api-status-card api-status-success">
+                        <h4>✅ API密钥已配置</h4>
+                        <p>心绪精灵小念已准备好为你服务！</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    api_configured = True
+                else:
+                    st.markdown("""
+                    <div class="api-status-card api-status-warning">
+                        <h4>⚠️ 需要配置API密钥</h4>
+                        <p>请输入你的API密钥来开始使用</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    api_configured = False
         
         # 美化的帮助文档
         st.markdown("""
         <div class="help-section">
-            <h4>📚 如何获取API Key？</h4>
+            <h4>📚 如何配置API Key？</h4>
             <ol class="help-steps">
-                <li>访问 <a href="https://platform.deepseek.com" target="_blank" style="color: #667eea; text-decoration: none;">DeepSeek官网</a></li>
-                <li>注册并登录你的账户</li>
-                <li>进入API密钥管理页面</li>
-                <li>创建新的API密钥</li>
-                <li>复制密钥并粘贴到上方输入框</li>
+                <li><strong>推荐方式：使用 Streamlit Secrets</strong>
+                    <ul>
+                        <li>在项目根目录创建 <code>.streamlit/secrets.toml</code> 文件</li>
+                        <li>添加：<code>DEEPSEEK_API_KEY = "sk-your-api-key"</code></li>
+                        <li>重启应用即可自动加载</li>
+                    </ul>
+                </li>
+                <li><strong>备选方式：环境变量</strong>
+                    <ul>
+                        <li>设置环境变量：<code>DEEPSEEK_API_KEY=sk-your-api-key</code></li>
+                    </ul>
+                </li>
+                <li><strong>临时方式：手动输入</strong>
+                    <ul>
+                        <li>在上方输入框中直接输入API密钥</li>
+                        <li>仅在当前会话有效</li>
+                    </ul>
+                </li>
             </ol>
+            <p><strong>获取API Key：</strong> 访问 <a href="https://platform.deepseek.com" target="_blank" style="color: #667eea; text-decoration: none;">DeepSeek官网</a> 注册并创建API密钥</p>
         </div>
         """, unsafe_allow_html=True)
-        
+
         # 隐私保护说明
         st.markdown("""
         <div class="privacy-note">
-            🔒 <strong>隐私承诺</strong><br>
-            你的API密钥仅在本浏览器会话中使用，不会被存储到任何服务器。关闭浏览器后，密钥信息将自动清除。
+            🔒 <strong>安全建议</strong><br>
+            • <strong>生产部署</strong>：强烈建议使用 Streamlit Secrets 或环境变量<br>
+            • <strong>开发测试</strong>：可以使用手动输入方式<br>
+            • <strong>隐私保护</strong>：手动输入的密钥仅在浏览器会话中使用，不会存储到服务器
         </div>
         """, unsafe_allow_html=True)
         
@@ -291,7 +329,6 @@ def render_model_configuration():
         if st.button("✅ 应用配置", type="primary", use_container_width=True):
             if apply_model_config(config):
                 st.success("🎉 配置已应用！重新发送消息即可生效")
-                st.rerun()
             else:
                 st.error("❌ 配置应用失败")
 
@@ -363,9 +400,10 @@ def render_session_management():
             st.session_state.current_reaction = ""
             st.session_state.current_gift = {"type": "", "content": ""}
             st.session_state.mood_history = []
+            # 清空聊天消息
+            st.session_state.messages = []
 
             st.success("✨ 新对话已开始！")
-            st.rerun()
 
     with col_b:
         if st.button("📋 复制会话链接", type="secondary", use_container_width=True):

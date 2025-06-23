@@ -140,8 +140,10 @@ def render_quick_actions():
                     del st.session_state[key]
             if 'session_id' in st.session_state:
                 del st.session_state.session_id
+            # 清空聊天消息
+            if 'messages' in st.session_state:
+                del st.session_state.messages
             st.success("✨ 新会话已开始！欢迎重新与小念聊天~")
-            st.rerun()
 
 
 def render_quick_stats():

@@ -207,10 +207,26 @@ def clean_markdown_text(text: str) -> str:
     cleaned_text = cleaned_text.replace('<s>', '&lt;s&gt;')
     cleaned_text = cleaned_text.replace('</s>', '&lt;/s&gt;')
 
-    # 3. 转义可能导致意外格式的特殊字符组合
-    # 转义可能被误解为删除线的连字符模式（保守处理）
-    # 只处理明显的 -单词- 模式
+    # 3. 转义单个波浪号（可能导致删除线）
+    cleaned_text = cleaned_text.replace('~', '\\~')
+
+    # 4. 转义可能导致意外格式的特殊字符组合
+    # 转义可能被误解为删除线的连字符模式
     cleaned_text = re.sub(r'(?<!\w)-([^-\s]{2,})-(?!\w)', r'\\-\1\\-', cleaned_text)
+
+    # 5. 转义其他可能导致Markdown问题的字符
+    # 转义星号（避免意外的粗体/斜体）
+    cleaned_text = re.sub(r'(?<!\*)\*(?!\*)', r'\\*', cleaned_text)
+
+    # 转义下划线（避免意外的粗体/斜体）
+    cleaned_text = re.sub(r'(?<!_)_(?!_)', r'\\_', cleaned_text)
+
+    # 6. 转义反引号（避免意外的代码块）
+    cleaned_text = cleaned_text.replace('`', '\\`')
+
+    # 7. 转义方括号（避免意外的链接）
+    cleaned_text = cleaned_text.replace('[', '\\[')
+    cleaned_text = cleaned_text.replace(']', '\\]')
 
     return cleaned_text
 

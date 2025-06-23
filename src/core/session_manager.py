@@ -63,6 +63,10 @@ class SessionManager:
         # 宝藏盒相关状态
         if 'treasure_count' not in st.session_state:
             st.session_state.treasure_count = 0
+
+        # 聊天消息状态
+        if 'messages' not in st.session_state:
+            st.session_state.messages = []
     
     def create_new_session(self) -> str:
         """创建新会话"""
@@ -77,6 +81,7 @@ class SessionManager:
         st.session_state.mood_history = []
         st.session_state.proactive_greeting_shown = False
         st.session_state.treasure_count = 0
+        st.session_state.messages = []
         
         return new_session_id
     

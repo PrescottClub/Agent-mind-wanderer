@@ -7,8 +7,9 @@ import streamlit as st
 import json
 import os
 import hashlib
+import httpx
 from datetime import datetime
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Generator
 from langchain_deepseek import ChatDeepSeek
 from langchain_core.prompts import PromptTemplate
 from pydantic import SecretStr
@@ -795,3 +796,112 @@ class AIEngine:
             context_lines.append("今天是工作日，要注意劳逸结合哦~")
 
         return "\n".join(context_lines)
+
+    def stream_emotion_enhanced_response(self, user_input: str, chat_history: List[Tuple[str, str]],
+                                       core_memories: List[Tuple[str, str, str]],
+                                       intimacy_level: int, total_interactions: int,
+                                       message_id: int, session_id: str) -> Generator[str, None, None]:
+        """
+        流式获取情感增强版AI回应
+
+        Args:
+            user_input: 用户输入
+            chat_history: 聊天历史
+            core_memories: 核心记忆
+            intimacy_level: 亲密度等级
+            total_interactions: 总互动次数
+            message_id: 消息ID
+            session_id: 会话ID
+
+        Yields:
+            str: AI回应的文本块
+        """
+        if not self.llm:
+            yield "💖 小念遇到了一些技术问题，但还是想陪伴你~"
+            return
+
+        try:
+            # 准备上下文信息
+            recent_moods = self._analyze_recent_mood_patterns(chat_history)
+            chat_history_text = self._format_chat_history_for_memory(chat_history)
+            core_memories_text = self._format_core_memories_for_memory(core_memories)
+
+            # 进行情感分析
+            emotion_analysis = self.analyze_user_emotion(user_input, session_id, message_id)
+            emotion_context = ""
+            if emotion_analysis:
+                emotion_context = f"""
+【深度情感洞察】
+- 主要情绪: {emotion_analysis['primary_emotion']} (强度: {emotion_analysis['emotion_intensity']:.1f}/10)
+- 情感效价: {emotion_analysis['emotion_valence']:.2f} (负面←→正面)
+- 情感唤醒: {emotion_analysis['emotion_arousal']:.2f} (平静←→激动)
+- 建议策略: {emotion_analysis['empathy_strategy']}
+- 语调建议: {emotion_analysis['response_tone']}
+- 触发词汇: {', '.join(emotion_analysis['trigger_keywords'])}
+- 置信度: {emotion_analysis['confidence_score']:.2f}
+"""
+
+            # 使用增强版提示词模板
+            from ..config.prompts import ENHANCED_MIND_SPRITE_PROMPT
+            enhanced_prompt = ENHANCED_MIND_SPRITE_PROMPT + emotion_context + """
+
+请根据以上情感分析洞察，调整你的回应风格和内容，让回应更贴合用户的真实情感状态。"""
+
+            # 构建完整的提示词
+            prompt_text = enhanced_prompt.format(
+                user_input=user_input,
+                chat_history=chat_history_text,
+                core_memories=core_memories_text,
+                intimacy_level=intimacy_level,
+                total_interactions=total_interactions,
+                recent_moods=recent_moods
+            )
+
+            # 使用httpx进行流式请求
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+
+            data = {
+                "model": "deepseek-chat",
+                "messages": [
+                    {"role": "user", "content": prompt_text}
+                ],
+                "stream": True,
+                "max_tokens": 2000,
+                "temperature": 0.7
+            }
+
+            with httpx.stream("POST", "https://api.deepseek.com/chat/completions",
+                            headers=headers, json=data, timeout=30.0) as response:
+
+                if response.status_code != 200:
+                    yield f"💖 小念遇到了网络问题，但还是想陪伴你~ (状态码: {response.status_code})"
+                    return
+
+                accumulated_content = ""
+                for line in response.iter_lines():
+                    if line.startswith("data: "):
+                        data_str = line[6:]  # 移除 "data: " 前缀
+
+                        if data_str.strip() == "[DONE]":
+                            break
+
+                        try:
+                            chunk_data = json.loads(data_str)
+                            if "choices" in chunk_data and len(chunk_data["choices"]) > 0:
+                                delta = chunk_data["choices"][0].get("delta", {})
+                                if "content" in delta:
+                                    content_chunk = delta["content"]
+                                    accumulated_content += content_chunk
+                                    yield content_chunk
+                        except json.JSONDecodeError:
+                            continue
+
+                # 如果没有收到任何内容，提供默认回应
+                if not accumulated_content.strip():
+                    yield "💖 小念感受到了你的心情，虽然有些技术问题，但小念的关怀是真诚的~"
+
+        except Exception as e:
+            yield f"💖 小念遇到了一些问题，但还是想陪伴你~ 错误: {str(e)}"
