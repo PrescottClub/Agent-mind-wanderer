@@ -117,21 +117,75 @@ def render_quick_actions():
     
     with col1:
         if st.button("🎭 情绪分析", use_container_width=True):
-            st.session_state.show_emotion_analysis = True
+            # 显示情绪分析功能
+            st.info("💫 情绪分析功能已激活！请发送一条消息，小念将进行深度情感分析~")
+            st.session_state.force_emotion_analysis = True
     
     with col2:
         if st.button("🔍 搜索资源", use_container_width=True):
-            st.session_state.show_search = True
+            # 设置搜索提示
+            st.info("🔍 心理健康资源搜索已准备就绪！请输入您的地理位置和需求，例如：'北京心理咨询机构'")
+            st.session_state.search_mode = True
     
     with col3:
         if st.button("📊 数据统计", use_container_width=True):
-            st.session_state.show_stats = True
+            # 显示统计信息
+            render_quick_stats()
     
     with col4:
         if st.button("🔄 新会话", use_container_width=True):
+            # 清理会话数据
+            for key in list(st.session_state.keys()):
+                if isinstance(key, str) and key.startswith(('chat_', 'proactive_', 'care_', 'current_')):
+                    del st.session_state[key]
             if 'session_id' in st.session_state:
                 del st.session_state.session_id
+            st.success("✨ 新会话已开始！欢迎重新与小念聊天~")
             st.rerun()
+
+
+def render_quick_stats():
+    """渲染快速统计信息"""
+    if 'session_id' not in st.session_state:
+        st.warning("⚠️ 请先开始对话")
+        return
+        
+    session_id = st.session_state.session_id
+    
+    try:
+        # 导入所需的类
+        from src.data.repositories.chat_repository import ChatRepository
+        from src.data.repositories.user_profile_repository import UserProfileRepository
+        
+        chat_repo = ChatRepository()
+        profile_repo = UserProfileRepository()
+        
+        # 获取统计数据
+        profile = profile_repo.get_profile(session_id)
+        recent_history = chat_repo.get_history(session_id, limit=50)
+        treasures = chat_repo.get_treasures(session_id)
+        
+        # 显示统计
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("💖 羁绊等级", f"Lv.{profile['intimacy_level'] if profile else 1}")
+            
+        with col2:
+            st.metric("💬 对话次数", len([msg for msg in recent_history if msg[0] == 'user']))
+            
+        with col3:
+            st.metric("🎁 收集礼物", len(treasures))
+            
+        # 最近活跃度
+        st.markdown("### 📈 最近活跃度")
+        if len(recent_history) > 0:
+            st.success(f"🌟 最近一次对话：{recent_history[0][2] if len(recent_history[0]) > 2 else '刚刚'}")
+        else:
+            st.info("💭 还没有开始对话，快来和小念聊聊吧~")
+            
+    except Exception as e:
+        st.error(f"📊 统计数据获取失败：{e}")
 
 
 def render_app_features():

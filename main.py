@@ -88,7 +88,8 @@ class MindSpriteApp:
                         st.markdown(f"💖 {care_message}")
                     
                     # 保存关怀消息到聊天历史
-                    care_response = f"💝 小念想起: {care_task.get('care_message', '小念想起你了~')}"
+                    care_message_clean = clean_markdown_text(care_task.get('care_message', '小念想起你了~'))
+                    care_response = f"💝 小念想起: {care_message_clean}"
                     self.chat_repo.add_message(session_id, "assistant", care_response)
                     
                     # 标记关怀任务为已完成
@@ -109,8 +110,9 @@ class MindSpriteApp:
             # 生成主动问候
             greeting = generate_proactive_greeting()
             
-            # 保存到数据库
-            self.chat_repo.add_message(session_id, "assistant", greeting)
+            # 保存到数据库（清理后的文本）
+            cleaned_greeting_for_db = clean_markdown_text(greeting)
+            self.chat_repo.add_message(session_id, "assistant", cleaned_greeting_for_db)
             
             # 显示主动问候
             with st.chat_message("assistant"):
@@ -191,8 +193,9 @@ class MindSpriteApp:
         if memory_association and memory_association != "null" and memory_association.strip():
             full_response = f"💭 记忆联想: {memory_association}\n\n{full_response}"
 
-        # 保存AI回应
-        self.chat_repo.add_message(session_id, "assistant", full_response)
+        # 保存AI回应（清理后的文本）
+        cleaned_full_response = clean_markdown_text(full_response)
+        self.chat_repo.add_message(session_id, "assistant", cleaned_full_response)
 
         # 检查是否为急救包回应
         is_emergency = parsed_response.get("is_emergency", False)

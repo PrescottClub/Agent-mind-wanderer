@@ -77,20 +77,9 @@ def render_api_config():
     </style>
     """, unsafe_allow_html=True)
     
-    # 浮动面板容器
+    # 浮动面板容器 - API已配置时隐藏
     with st.container():
-        if api_configured:
-            st.markdown("""
-            <div class="api-float-panel">
-                <div class="api-status-badge api-status-success">
-                    ✅ API已配置
-                </div>
-                <div style="font-size: 0.8rem; color: #666;">
-                    小念已准备好为你服务~ 💖
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
+        if not api_configured:
             st.markdown("""
             <div class="api-float-panel">
                 <div class="api-status-badge api-status-warning">
