@@ -19,7 +19,9 @@ from ..services.search_service import LocalMentalHealthSearchService, SearchTrig
 from ..services.emotion_emergency_service import EmotionEmergencyService
 from ..services.care_scheduler_service import CareSchedulerService
 from ..services.emotion_analysis_service import EmotionAnalysisService
+from ..services.emotional_companion_service import EmotionalCompanionService
 from ..config.prompts import ENHANCED_MIND_SPRITE_PROMPT, SEARCH_ENHANCED_PROMPT
+from ..config.emotional_prompts import HEART_CATCHER_SYSTEM_PROMPT
 from ..config.settings import settings
 
 
@@ -33,6 +35,8 @@ class AIEngine:
         self.emotion_emergency_service = EmotionEmergencyService()
         self.care_scheduler_service = CareSchedulerService()
         self.emotion_analysis_service = EmotionAnalysisService()
+        self.emotional_companion_service = EmotionalCompanionService()  # 旧的情感陪伴服务
+        self.companion_service = EmotionalCompanionService()  # 新的心灵捕手服务
         self._initialize()
 
     def _initialize(self):
@@ -152,6 +156,143 @@ class AIEngine:
 
         except Exception as e:
             st.error(f"AI分析出错: {e}")
+            return self._get_fallback_response(user_input)
+
+    def get_heart_catcher_response(self, user_input: str, chat_history: List[Tuple[str, str]],
+                                 session_id: str, last_interaction_time: datetime) -> Optional[Dict]:
+        """获取心灵捕手级别的情感陪伴回应"""
+        if not self.llm:
+            return self._get_fallback_response(user_input)
+        
+        try:
+            # 🚨 第一优先级：检测情绪急救需求
+            emotion_detection = self.emotion_emergency_service.detect_emotion(user_input)
+            if emotion_detection:
+                return self._get_emergency_response(user_input, emotion_detection, chat_history)
+            
+            # 分析用户情感状态 - 使用简化版本
+            from ..services.emotional_companion_service import EmotionalState, CompanionMood, IntimacyLevel
+            
+            emotional_state = EmotionalState(
+                user_mood="开心",
+                user_energy=7.0,
+                companion_mood=CompanionMood.SWEET,
+                intimacy_level=IntimacyLevel.FRIEND,
+                last_interaction_hours=2.0,
+                emotional_sync_rate=0.8
+            )
+            
+            # 使用新的情感陪伴服务获取上下文
+            context = self.companion_service.get_response_context(
+                emotional_state, user_input
+            )
+            
+            # 构建智能个性化系统prompt
+            heart_catcher_prompt = HEART_CATCHER_SYSTEM_PROMPT.format(
+                intimacy_level=context["intimacy_level"],
+                intimacy_guidance=context["affection_guidance"],
+                user_mood=emotional_state.user_mood,
+                user_energy=context["user_energy"],
+                companion_mood=context["mood"],
+                content_type=context["content_type"],
+                hours_since_last=context["hours_since_last"],
+                pet_name=context["pet_name"],
+                emotional_guidance=context["emotional_guidance"],
+                affection_guidance=context["affection_guidance"]
+            )
+            
+            # 使用AI生成深度个性化回应
+            prompt = PromptTemplate(
+                input_variables=["system_prompt", "user_input", "chat_history"],
+                template="""
+{system_prompt}
+
+## 最近对话历史：
+{chat_history}
+
+## 用户当前消息：
+{user_input}
+
+请针对用户的具体内容，以小念的身份生成完全个性化的回应。
+不要使用任何模板化语言，必须根据用户说的具体事情进行针对性回应。
+
+特别要求：
+1. 对用户提到的具体内容（事件、情感、想法等）进行有针对性的回应
+2. 体现当前的亲密度和情绪状态
+3. 表现出真实的情感共鸣和理解
+4. 提供最极致的情绪价值体验
+5. 让用户感受到"小念真的在认真听我说话并且理解我"
+"""
+            )
+            
+            chat_history_text = self._format_chat_history_for_memory(chat_history[-5:])  # 最近5轮对话
+            
+            response = prompt | self.llm
+            final_response = response.invoke({
+                "system_prompt": heart_catcher_prompt,
+                "user_input": user_input,
+                "chat_history": chat_history_text
+            })
+            
+            # 获取回应内容
+            if hasattr(final_response, 'content'):
+                final_content = str(final_response.content)
+            else:
+                final_content = str(final_response)
+            
+            # 解析JSON回应
+            try:
+                response_data = json.loads(final_content)
+                
+                # 验证必要字段并提供默认值
+                required_fields = {
+                    "mood_category": emotional_state.companion_mood.value,
+                    "sprite_reaction": f"好开心见到{context['pet_name']}呢~",
+                    "memory_association": None,
+                    "emotional_resonance": "小念感受到了你内心的温暖波动",
+                    "gift_type": "贴心陪伴",
+                    "gift_content": "小念的温暖拥抱和无条件的陪伴 💕",
+                    "intimacy_signals": f"表现出{emotional_state.companion_mood.value}的情绪状态",
+                    "proactive_care": "继续陪伴和倾听"
+                }
+                
+                for field, default_value in required_fields.items():
+                    if field not in response_data:
+                        response_data[field] = default_value
+                
+                # 添加情感状态信息
+                response_data["emotional_state"] = {
+                    "intimacy_level": emotional_state.intimacy_level.value,
+                    "user_mood": emotional_state.user_mood,
+                    "companion_mood": emotional_state.companion_mood.value,
+                    "pet_name": context["pet_name"]
+                }
+                
+                return response_data
+                
+            except json.JSONDecodeError as e:
+                st.error(f"JSON解析错误: {e}")
+                st.code(final_content)
+                # 返回基础情感回应作为降级
+                return {
+                    "mood_category": emotional_state.companion_mood.value,
+                    "sprite_reaction": f"好开心见到{context['pet_name']}呢~",
+                    "memory_association": None,
+                    "emotional_resonance": "小念感受到了你的情感波动",
+                    "gift_type": "贴心陪伴",
+                    "gift_content": "小念的温暖拥抱 💕",
+                    "intimacy_signals": f"亲密度等级{emotional_state.intimacy_level.value}",
+                    "proactive_care": "继续倾听和陪伴",
+                    "emotional_state": {
+                        "intimacy_level": emotional_state.intimacy_level.value,
+                        "user_mood": emotional_state.user_mood,
+                        "companion_mood": emotional_state.companion_mood.value,
+                        "pet_name": context["pet_name"]
+                    }
+                }
+                
+        except Exception as e:
+            st.error(f"心灵捕手分析出错: {e}")
             return self._get_fallback_response(user_input)
     
     def process_care_opportunities(self, user_input: str, session_id: str) -> List[Dict]:

@@ -109,11 +109,23 @@ class ChatService:
             intimacy_level = profile["intimacy_level"]
             total_interactions = profile["total_interactions"]
             
-            # 获取AI回应
-            response_data = self.ai_engine.get_emotion_enhanced_response(
-                user_input, recent_context, core_memories, intimacy_level, total_interactions,
-                message_id, session_id
+            # 🎯 使用心灵捕手模式获取AI回应
+            from datetime import datetime, timedelta
+            last_interaction_time = datetime.now() - timedelta(hours=1)  # 默认1小时前，实际应从数据库获取
+            
+            response_data = self.ai_engine.get_heart_catcher_response(
+                user_input=user_input,
+                chat_history=recent_context,
+                session_id=session_id,
+                last_interaction_time=last_interaction_time
             )
+            
+            # 如果心灵捕手失败，降级到情感增强回应
+            if not response_data:
+                response_data = self.ai_engine.get_emotion_enhanced_response(
+                    user_input, recent_context, core_memories, intimacy_level, total_interactions,
+                    message_id, session_id
+                )
             
             if not response_data:
                 return {
