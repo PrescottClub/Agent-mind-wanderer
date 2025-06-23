@@ -195,38 +195,26 @@ def clean_markdown_text(text: str) -> str:
     if not text:
         return text
 
-    # 转义可能导致删除线的字符
+    # 修复黑线划掉问题：移除所有可能导致markdown渲染问题的字符
     cleaned_text = text
+    
+    # 移除删除线标记
+    cleaned_text = cleaned_text.replace('~~', '')
+    
+    # 移除其他markdown格式标记
+    cleaned_text = cleaned_text.replace('**', '')  # 移除粗体标记
+    cleaned_text = cleaned_text.replace('__', '')  # 移除下划线粗体
+    cleaned_text = cleaned_text.replace('`', '')   # 移除代码标记
 
-    # 1. 转义双波浪号（最常见的删除线语法）
-    cleaned_text = cleaned_text.replace('~~', '\\~\\~')
-
-    # 2. 转义HTML删除线标签
-    cleaned_text = cleaned_text.replace('<del>', '&lt;del&gt;')
-    cleaned_text = cleaned_text.replace('</del>', '&lt;/del&gt;')
-    cleaned_text = cleaned_text.replace('<s>', '&lt;s&gt;')
-    cleaned_text = cleaned_text.replace('</s>', '&lt;/s&gt;')
-
-    # 3. 转义单个波浪号（可能导致删除线）
-    cleaned_text = cleaned_text.replace('~', '\\~')
-
-    # 4. 转义可能导致意外格式的特殊字符组合
-    # 转义可能被误解为删除线的连字符模式
-    cleaned_text = re.sub(r'(?<!\w)-([^-\s]{2,})-(?!\w)', r'\\-\1\\-', cleaned_text)
-
-    # 5. 转义其他可能导致Markdown问题的字符
-    # 转义星号（避免意外的粗体/斜体）
-    cleaned_text = re.sub(r'(?<!\*)\*(?!\*)', r'\\*', cleaned_text)
-
-    # 转义下划线（避免意外的粗体/斜体）
-    cleaned_text = re.sub(r'(?<!_)_(?!_)', r'\\_', cleaned_text)
-
-    # 6. 转义反引号（避免意外的代码块）
-    cleaned_text = cleaned_text.replace('`', '\\`')
-
-    # 7. 转义方括号（避免意外的链接）
-    cleaned_text = cleaned_text.replace('[', '\\[')
-    cleaned_text = cleaned_text.replace(']', '\\]')
+    # 移除HTML删除线标签
+    cleaned_text = cleaned_text.replace('<del>', '')
+    cleaned_text = cleaned_text.replace('</del>', '')
+    cleaned_text = cleaned_text.replace('<s>', '')
+    cleaned_text = cleaned_text.replace('</s>', '')
+    
+    # 移除可能导致问题的其他字符
+    cleaned_text = cleaned_text.replace('[', '')
+    cleaned_text = cleaned_text.replace(']', '')
 
     return cleaned_text
 
