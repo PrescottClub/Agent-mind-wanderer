@@ -27,7 +27,8 @@ from src.utils.helpers import (
     check_first_visit_today,
     generate_proactive_greeting,
     parse_ai_response,
-    parse_enhanced_ai_response
+    parse_enhanced_ai_response,
+    clean_markdown_text
 )
 
 # ==================== 页面配置 ====================
@@ -82,7 +83,8 @@ class MindSpriteApp:
                     with st.chat_message("assistant"):
                         st.markdown("### 💝 小念想起")
                         st.info("小念一直记挂着你呢~")
-                        st.markdown(f"💖 {care_task.get('care_message', '小念想起你了~')}")
+                        care_message = clean_markdown_text(care_task.get('care_message', '小念想起你了~'))
+                        st.markdown(f"💖 {care_message}")
                     
                     # 保存关怀消息到聊天历史
                     care_response = f"💝 小念想起: {care_task.get('care_message', '小念想起你了~')}"
@@ -111,7 +113,8 @@ class MindSpriteApp:
             
             # 显示主动问候
             with st.chat_message("assistant"):
-                st.markdown(f"💖 {greeting}")
+                cleaned_greeting = clean_markdown_text(greeting)
+                st.markdown(f"💖 {cleaned_greeting}")
             
             # 标记已显示
             st.session_state.proactive_greeting_shown = True
@@ -134,7 +137,8 @@ class MindSpriteApp:
                                 st.write(step)
                     
                     # 显示最终回应
-                    st.markdown(f"💖 {parsed['final_response']}")
+                    cleaned_final_response = clean_markdown_text(parsed['final_response'])
+                    st.markdown(f"💖 {cleaned_final_response}")
                 else:
                     st.markdown(content)
     
@@ -223,7 +227,8 @@ class MindSpriteApp:
                 
                 # 共情回应
                 if "empathy_response" in emotion_analysis:
-                    st.info(f"💙 {emotion_analysis['empathy_response']}")
+                    empathy_response = clean_markdown_text(emotion_analysis['empathy_response'])
+                    st.info(f"💙 {empathy_response}")
                 
                 st.markdown("---")
             
@@ -235,11 +240,12 @@ class MindSpriteApp:
                 
                 # 显示情绪共鸣
                 st.markdown("### 💙 深度理解")
-                st.markdown(f"🫂 {parsed_response['emotional_resonance']}")
+                emotional_resonance = clean_markdown_text(parsed_response['emotional_resonance'])
+                st.markdown(f"🫂 {emotional_resonance}")
                 st.markdown("---")
                 
-                # 显示主要回应 - 转义波浪号防止删除线渲染
-                sprite_reaction = parsed_response['sprite_reaction'].replace('~~', '\\~\\~')
+                # 显示主要回应 - 清理markdown文本防止渲染问题
+                sprite_reaction = clean_markdown_text(parsed_response['sprite_reaction'])
                 st.markdown(f"💖 {sprite_reaction}")
             else:
                 # 【普通增强版回应】
@@ -247,16 +253,18 @@ class MindSpriteApp:
                 memory_association = parsed_response["memory_association"]
                 if memory_association and memory_association != "null" and memory_association.strip():
                     st.markdown("### 💭 记忆联想")
-                    st.info(f"🌟 {memory_association}")
+                    cleaned_memory = clean_markdown_text(memory_association)
+                    st.info(f"🌟 {cleaned_memory}")
                     st.markdown("---")
                 
                 # 显示情绪共鸣
                 st.markdown("### 💕 情感共鸣")
-                st.markdown(f"🫶 {parsed_response['emotional_resonance']}")
+                emotional_resonance = clean_markdown_text(parsed_response['emotional_resonance'])
+                st.markdown(f"🫶 {emotional_resonance}")
                 st.markdown("---")
                 
-                # 显示主要回应 - 转义波浪号防止删除线渲染
-                sprite_reaction = parsed_response['sprite_reaction'].replace('~~', '\\~\\~')
+                # 显示主要回应 - 清理markdown文本防止渲染问题
+                sprite_reaction = clean_markdown_text(parsed_response['sprite_reaction'])
                 st.markdown(f"💖 {sprite_reaction}")
 
         # 处理礼物
@@ -276,7 +284,8 @@ class MindSpriteApp:
                 st.markdown("### 🆘 情绪急救包")
                 with st.container():
                     st.error(f"**{gift_info['type']}**")
-                    st.markdown(gift_info['content'])
+                    cleaned_gift_content = clean_markdown_text(gift_info['content'])
+                    st.markdown(cleaned_gift_content)
                     
                     # 显示危机资源（如果有）
                     if parsed_response.get("emergency_data", {}).get("crisis_resources"):
@@ -296,7 +305,8 @@ class MindSpriteApp:
                         st.info(support_msg)
             else:
                 st.markdown("### 🎁 小念的礼物")
-                st.success(f"**{gift_info['type']}**\n\n{gift_info['content']}")
+                cleaned_gift_content = clean_markdown_text(gift_info['content'])
+                st.success(f"**{gift_info['type']}**\n\n{cleaned_gift_content}")
 
         # 【v5.1新增】添加经验值和处理升级
         exp_result = self.intimacy_service.add_exp(session_id, exp_to_add=15)  # 记忆联想功能经验值

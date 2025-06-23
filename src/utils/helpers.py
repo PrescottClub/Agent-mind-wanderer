@@ -186,6 +186,20 @@ def parse_ai_response(response_text: str) -> Dict:
         }
 
 
+def clean_markdown_text(text: str) -> str:
+    """
+    清理文本中可能导致Markdown渲染问题的字符
+    主要处理波浪号，防止被渲染为删除线
+    """
+    if not text:
+        return text
+    
+    # 转义双波浪号，防止删除线渲染
+    cleaned_text = text.replace('~~', '\\~\\~')
+    
+    return cleaned_text
+
+
 def extract_gift_from_response(response_text: str) -> Dict:
     """
     从AI回应中提取礼物信息
