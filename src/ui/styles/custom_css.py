@@ -29,7 +29,12 @@ header {visibility: hidden;}
 
 /* 🎨 全局样式统一 */
 .stApp {
-    background: var(--bg-primary);
+    background: linear-gradient(135deg, 
+        #FFFBF5 0%, 
+        #FFF8F0 25%, 
+        #F8F9FA 50%, 
+        #F0F8FF 75%, 
+        #FFF0F5 100%) !important;
     font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
     color: var(--text);
     min-height: 100vh;
@@ -116,27 +121,27 @@ header {visibility: hidden;}
         0 3px 12px rgba(255, 122, 158, 0.1) !important;
 }
 
-/* AI聊天气泡 - 梦幻粉色 */
+/* AI聊天气泡 - 温柔浅粉渐变 */
 .stChatMessage[data-testid="assistant-message"] {
-    background: linear-gradient(135deg, #FF7A9E 0%, #FF69B4 100%) !important;
-    color: white !important;
+    background: linear-gradient(135deg, #FFE4E1 0%, #FFF0F5 50%, #F0E6FF 100%) !important;
+    color: var(--text) !important;
     margin-right: 3rem !important;
     margin-left: 0 !important;
-    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    border: 2px solid rgba(255, 122, 158, 0.3) !important;
 }
 
 .stChatMessage[data-testid="assistant-message"] * {
-    color: white !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    color: var(--text) !important;
+    text-shadow: none !important;
 }
 
-/* 用户聊天气泡 - 温柔蜜桃色 */
+/* 用户聊天气泡 - 温柔浅蓝渐变 */
 .stChatMessage[data-testid="user-message"] {
-    background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 100%) !important;
+    background: linear-gradient(135deg, #F0F8FF 0%, #E6F3FF 50%, #FFF5EE 100%) !important;
     color: var(--text) !important;
     margin-left: 3rem !important;
     margin-right: 0 !important;
-    border: 2px solid rgba(255, 255, 255, 0.9) !important;
+    border: 2px solid rgba(176, 196, 222, 0.4) !important;
 }
 
 .stChatMessage[data-testid="user-message"] * {
@@ -906,7 +911,7 @@ document.addEventListener('DOMContentLoaded', function() {
 [data-testid="stChatInput"] > div {
     border-radius: 25px !important;
     border: 2px solid var(--border) !important;
-    background: var(--bg-card) !important;
+    background: linear-gradient(135deg, #FAFAFA 0%, #F8F9FA 50%, #FFF8F0 100%) !important;
     box-shadow: 0 4px 15px var(--shadow) !important;
     transition: all 0.3s ease !important;
 }
@@ -1014,8 +1019,12 @@ document.addEventListener('DOMContentLoaded', function() {
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    height: 50px !important;
-    background: linear-gradient(to top, var(--accent) 0%, transparent 100%) !important;
+    height: 60px !important;
+    background: linear-gradient(to top, 
+        rgba(240, 230, 255, 0.6) 0%, 
+        rgba(255, 248, 240, 0.4) 30%, 
+        rgba(255, 255, 255, 0.2) 60%, 
+        transparent 100%) !important;
     pointer-events: none !important;
     z-index: 0 !important;
 }
