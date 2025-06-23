@@ -349,7 +349,17 @@ class MindSpriteApp:
     def render_treasure_box(self):
         """渲染宝藏盒"""
         session_id = self.session_manager.session_id
-        treasures = self.chat_repo.get_treasures(session_id, limit=5)
+        treasures = self.chat_repo.get_treasures(session_id, limit=6)  # 多获取一个，以防当前礼物被包含
+        
+        # 如果有当前礼物，从历史中移除（避免重复显示）
+        current_gift = st.session_state.get('current_gift')
+        if current_gift and treasures:
+            # 过滤掉可能重复的最新礼物
+            filtered_treasures = []
+            for treasure in treasures:
+                if not (treasure[0] == current_gift['type'] and treasure[1] == current_gift['content']):
+                    filtered_treasures.append(treasure)
+            treasures = filtered_treasures[:5]  # 只保留5个历史礼物
 
         # 初始化会话状态
         if "show_treasure_modal" not in st.session_state:
@@ -358,7 +368,7 @@ class MindSpriteApp:
             st.session_state.selected_treasure = None
 
         if treasures:
-            st.markdown('<h3 class="treasure-box-title">🎁 小念的宝藏盒</h3>', unsafe_allow_html=True)
+            st.markdown("💝 **小念为你珍藏的美好回忆**")
 
             cols = st.columns(min(len(treasures), 3))
             for i, (gift_type, gift_content, collected_at, is_favorite) in enumerate(treasures):
@@ -481,8 +491,9 @@ class MindSpriteApp:
         if user_input := st.chat_input("和小念分享你的心情吧~ 💭"):
             self.handle_user_input(user_input)
         
-        # 渲染宝藏盒
-        self.render_treasure_box()
+        # 渲染宝藏盒（折叠显示历史礼物，避免与当前礼物重复）
+        with st.expander("🎁 小念的宝藏盒（点击查看历史礼物）", expanded=False):
+            self.render_treasure_box()
 
 
 def main():
