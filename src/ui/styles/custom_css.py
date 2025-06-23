@@ -333,14 +333,14 @@ section:has([data-testid="stChatInput"]) {
     opacity: 1 !important;
 }
 
-/* 🎨 聊天输入框容器 - 精致设计 */
+/* 🎨 聊天输入框容器 - 精致设计 + 完美对齐 */
 [data-testid="stChatInput"] {
-    position: fixed !important;
+    position: sticky !important;
     bottom: 20px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: calc(100% - 40px) !important;
-    max-width: 760px !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
     z-index: 1000 !important;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 251, 245, 0.9)) !important;
     border-radius: 25px !important;
@@ -349,7 +349,7 @@ section:has([data-testid="stChatInput"]) {
         0 4px 15px rgba(255, 122, 158, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
     padding: 8px 8px 8px 16px !important;
-    margin: 0 !important;
+    margin: 20px 0 !important;
     backdrop-filter: blur(15px) !important;
     border: 2px solid rgba(255, 122, 158, 0.3) !important;
     display: flex !important;

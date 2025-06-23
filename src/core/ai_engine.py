@@ -149,13 +149,13 @@ class AIEngine:
                 return response_data
                 
             except json.JSONDecodeError as e:
-                st.error(f"JSON解析错误: {e}")
-                st.code(final_content)
+                print(f"JSON解析错误: {e}")
+                print(f"原始内容: {final_content}")
                 # 返回降级回应
                 return self._get_fallback_response(user_input)
 
         except Exception as e:
-            st.error(f"AI分析出错: {e}")
+            print(f"AI分析出错: {e}")
             return self._get_fallback_response(user_input)
 
     def get_heart_catcher_response(self, user_input: str, chat_history: List[Tuple[str, str]],
@@ -271,8 +271,9 @@ class AIEngine:
                 return response_data
                 
             except json.JSONDecodeError as e:
-                st.error(f"JSON解析错误: {e}")
-                st.code(final_content)
+                # 不在界面显示错误，仅打印到控制台
+                print(f"JSON解析错误: {e}")
+                print(f"原始内容: {final_content}")
                 # 返回基础情感回应作为降级
                 return {
                     "mood_category": emotional_state.companion_mood.value,
@@ -292,7 +293,7 @@ class AIEngine:
                 }
                 
         except Exception as e:
-            st.error(f"心灵捕手分析出错: {e}")
+            print(f"心灵捕手分析出错: {e}")
             return self._get_fallback_response(user_input)
     
     def process_care_opportunities(self, user_input: str, session_id: str) -> List[Dict]:
@@ -502,8 +503,8 @@ class AIEngine:
                 return response_data
                 
             except json.JSONDecodeError as e:
-                st.error(f"JSON解析错误: {e}")
-                st.code(final_content)
+                print(f"JSON解析错误: {e}")
+                print(f"原始内容: {final_content}")
                 # 返回降级回应，但包含情感分析
                 fallback_response = self._get_fallback_response(user_input)
                 if emotion_analysis:
@@ -511,7 +512,7 @@ class AIEngine:
                 return fallback_response
 
         except Exception as e:
-            st.error(f"AI分析出错: {e}")
+            print(f"AI分析出错: {e}")
             fallback_response = self._get_fallback_response(user_input)
             # 即使出错也尝试提供情感分析
             try:
@@ -632,7 +633,7 @@ class AIEngine:
             return response_data
             
         except Exception as e:
-            st.error(f"搜索回应生成出错: {e}")
+            print(f"搜索回应生成出错: {e}")
             return self._get_fallback_response(user_input)
 
     def _get_emergency_response(self, user_input: str, emotion_detection, chat_history: List[Tuple[str, str]]) -> Dict:
@@ -662,7 +663,7 @@ class AIEngine:
             return response_data
             
         except Exception as e:
-            st.error(f"情绪急救包处理出错: {e}")
+            print(f"情绪急救包处理出错: {e}")
             return self._get_fallback_response(user_input)
     
     def _format_emergency_techniques(self, techniques: List) -> str:

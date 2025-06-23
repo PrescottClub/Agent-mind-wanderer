@@ -195,16 +195,20 @@ def clean_markdown_text(text: str) -> str:
     if not text:
         return text
 
-    # 修复黑线划掉问题：移除所有可能导致markdown渲染问题的字符
+    # 修复黑线划掉问题：完全重写文本清理逻辑
     cleaned_text = text
     
-    # 移除删除线标记
+    # 移除所有可能导致渲染问题的markdown标记
+    # 删除线标记
     cleaned_text = cleaned_text.replace('~~', '')
     
-    # 移除其他markdown格式标记
-    cleaned_text = cleaned_text.replace('**', '')  # 移除粗体标记
-    cleaned_text = cleaned_text.replace('__', '')  # 移除下划线粗体
-    cleaned_text = cleaned_text.replace('`', '')   # 移除代码标记
+    # 只保留表情符号和基本文字，移除其他格式
+    import re
+    # 移除多个连续的特殊字符（但保留表情符号）
+    cleaned_text = re.sub(r'[*_`~]{2,}', '', cleaned_text)
+    
+    # 移除单独的markdown字符（但保留在表情符号中的）
+    cleaned_text = re.sub(r'(?<![^\s])[*_`~](?![^\s])', '', cleaned_text)
 
     # 移除HTML删除线标签
     cleaned_text = cleaned_text.replace('<del>', '')

@@ -79,7 +79,8 @@ class ChatService:
                 yield current_text
 
         except Exception as e:
-            st.error(f"流式处理出错: {e}")
+            # 不在界面显示错误，仅打印到控制台  
+            print(f"流式处理出错: {e}")
             yield f"💖 小念遇到了一些技术问题，但还是想陪伴你~"
     
     def process_user_message(self, session_id: str, user_input: str, message_id: int) -> Dict:
