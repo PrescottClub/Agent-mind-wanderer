@@ -4,6 +4,7 @@
 """
 
 import random
+import re
 from datetime import datetime
 from typing import Dict, List
 import sys
@@ -189,14 +190,28 @@ def parse_ai_response(response_text: str) -> Dict:
 def clean_markdown_text(text: str) -> str:
     """
     清理文本中可能导致Markdown渲染问题的字符
-    主要处理波浪号，防止被渲染为删除线
+    主要防止被渲染为删除线，保持文本的原始显示效果
     """
     if not text:
         return text
-    
-    # 转义双波浪号，防止删除线渲染
-    cleaned_text = text.replace('~~', '\\~\\~')
-    
+
+    # 转义可能导致删除线的字符
+    cleaned_text = text
+
+    # 1. 转义双波浪号（最常见的删除线语法）
+    cleaned_text = cleaned_text.replace('~~', '\\~\\~')
+
+    # 2. 转义HTML删除线标签
+    cleaned_text = cleaned_text.replace('<del>', '&lt;del&gt;')
+    cleaned_text = cleaned_text.replace('</del>', '&lt;/del&gt;')
+    cleaned_text = cleaned_text.replace('<s>', '&lt;s&gt;')
+    cleaned_text = cleaned_text.replace('</s>', '&lt;/s&gt;')
+
+    # 3. 转义可能导致意外格式的特殊字符组合
+    # 转义可能被误解为删除线的连字符模式（保守处理）
+    # 只处理明显的 -单词- 模式
+    cleaned_text = re.sub(r'(?<!\w)-([^-\s]{2,})-(?!\w)', r'\\-\1\\-', cleaned_text)
+
     return cleaned_text
 
 
