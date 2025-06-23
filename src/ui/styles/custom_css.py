@@ -14,6 +14,13 @@ footer {visibility: hidden;}
 header {visibility: hidden;}
 .stDeployButton {visibility: hidden;}
 
+/* 强制隐藏和覆盖底部深色元素 */
+.stApp > footer {visibility: hidden;}
+.stApp > div:last-child {background: transparent !important;}
+[data-testid="stBottom"] {display: none !important;}
+.stBottom {display: none !important;}
+div[data-testid="stDecoration"] {display: none !important;}
+
 /* 🎨 心动奶昔统一颜色系统 */
 :root {
     --primary: #FF7A9E;                 /* 草莓粉 - 主要交互元素 */
@@ -289,6 +296,41 @@ input::placeholder, textarea::placeholder,
     color: var(--secondary) !important;
     font-weight: 500;
     font-family: 'Nunito', sans-serif !important;
+}
+
+/* 🚨 强制保护聊天输入框 - 确保其可见性和功能 */
+[data-testid="stChatInput"], 
+[data-testid="stChatInput"] *, 
+.stChatInputContainer,
+.stChatInputContainer *,
+.stChatInput,
+.stChatInput *,
+div:has([data-testid="stChatInput"]),
+section:has([data-testid="stChatInput"]) {
+    background-color: unset !important;
+    background: unset !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    position: relative !important;
+}
+
+/* 强制恢复聊天输入框的所有样式 */
+[data-testid="stChatInput"] {
+    display: flex !important;
+    position: relative !important;
+    z-index: 9999 !important;
+}
+
+[data-testid="stChatInput"] > div {
+    display: flex !important;
+    width: 100% !important;
+}
+
+[data-testid="stChatInput"] input {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 /* 🎨 聊天输入框 - 精致设计 */
@@ -1012,27 +1054,92 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
-/* 修复底部黑色问题 - 添加可爱的底部装饰 */
+/* 修复底部黑色问题 - 强力覆盖所有底部元素 */
 .stApp::after {
     content: '' !important;
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    height: 60px !important;
+    height: 100px !important;
     background: linear-gradient(to top, 
-        rgba(240, 230, 255, 0.6) 0%, 
-        rgba(255, 248, 240, 0.4) 30%, 
-        rgba(255, 255, 255, 0.2) 60%, 
+        rgba(240, 230, 255, 0.8) 0%, 
+        rgba(255, 248, 240, 0.6) 25%, 
+        rgba(255, 255, 255, 0.4) 50%, 
+        rgba(240, 248, 255, 0.2) 75%,
         transparent 100%) !important;
     pointer-events: none !important;
-    z-index: 0 !important;
+    z-index: 999 !important;
+}
+
+/* 额外的底部覆盖层 */
+.stApp::before {
+    content: '' !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 50px !important;
+    background: linear-gradient(135deg, 
+        #FFFBF5 0%, 
+        #FFF8F0 25%, 
+        #F8F9FA 50%, 
+        #F0F8FF 75%, 
+        #FFF0F5 100%) !important;
+    pointer-events: none !important;
+    z-index: 998 !important;
 }
 
 /* 确保内容在装饰之上 */
 .main {
     position: relative !important;
     z-index: 1 !important;
+}
+
+/* 强力清除所有可能的深色背景 - 但保护聊天输入框 */
+body, html, div, section, main, footer, .stApp, .stApp > div {
+    background-color: transparent !important;
+}
+
+/* 只对非聊天输入框元素应用透明背景 */
+.stApp > div:not(:has([data-testid="stChatInput"])),
+.stApp section:not(:has([data-testid="stChatInput"])),
+.stApp main:not(:has([data-testid="stChatInput"])) {
+    background-color: transparent !important;
+}
+
+/* 特殊处理可能的深色容器 - 但保护聊天输入区域 */
+div[class*="stVerticalBlock"]:not(:has([data-testid="stChatInput"])), 
+div[class*="stHorizontalBlock"]:not(:has([data-testid="stChatInput"])),
+div[class*="block-container"]:not(:has([data-testid="stChatInput"])),
+.stApp > div:last-child:not(:has([data-testid="stChatInput"])),
+.stApp > div:first-child:not(:has([data-testid="stChatInput"])) {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* 覆盖任何底部固定元素 */
+*[style*="position: fixed"], 
+*[style*="position:fixed"] {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* 专门针对底部区域的强制样式 */
+.stApp > div:last-child::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 100px !important;
+    background: linear-gradient(to top, 
+        rgba(255, 251, 245, 0.95) 0%, 
+        rgba(255, 248, 240, 0.8) 30%, 
+        rgba(248, 249, 250, 0.6) 60%, 
+        transparent 100%) !important;
+    pointer-events: none !important;
+    z-index: 1000 !important;
 }
 </style>
 """

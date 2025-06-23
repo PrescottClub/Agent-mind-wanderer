@@ -20,7 +20,8 @@ from src.data.repositories.user_profile_repository import UserProfileRepository
 from src.services.intimacy_service import IntimacyService
 from src.core.ai_engine import AIEngine
 from src.core.session_manager import SessionManager
-from src.ui.components.sidebar import render_sidebar
+from src.ui.components.api_config import render_api_config, render_compact_status
+from src.ui.components.main_info import render_main_info_panel
 from src.config.settings import settings
 from src.utils.helpers import (
     get_environment_context,
@@ -37,7 +38,7 @@ st.set_page_config(
     page_title="心绪精灵 ✨",
     page_icon="✨",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # 应用甜美马卡龙CSS样式
@@ -461,12 +462,17 @@ class MindSpriteApp:
             st.error("❌ 数据库初始化失败，应用可能无法正常工作")
             return
         
-        # 渲染侧边栏并获取API密钥
-        api_key = render_sidebar()
+        # 渲染浮动API配置面板
+        api_configured = render_api_config()
         
         # 检查API密钥
-        if not api_key:
-            st.info("👈 请在左侧侧边栏输入你的DeepSeek API Key以开始聊天。")
+        if not api_configured:
+            # 渲染页面头部
+            self.render_header()
+            
+            # 显示API配置提示
+            render_compact_status()
+            
             st.markdown("""
             ### 欢迎来到心绪精灵！✨
             
@@ -478,15 +484,23 @@ class MindSpriteApp:
             - 🎁 **宝藏小盒** - 收集美好回忆
             - 🤫 **秘密约定** - 特殊彩蛋惊喜
             
-            配置你的API密钥后即可开始与小念的温暖对话~ 💕
+            请在右上角配置你的API密钥后即可开始与小念的温暖对话~ 💕
             """)
+            
+            # 显示主页面信息
+            render_main_info_panel(self.session_manager.session_id)
             st.stop()
         
         # 初始化AI引擎
-        self.initialize_ai_engine(api_key, settings.serp_api_key)
+        api_key = st.session_state.get('deepseek_api_key', '')
+        if api_key:
+            self.initialize_ai_engine(api_key, settings.serp_api_key)
         
         # 渲染页面头部
         self.render_header()
+        
+        # 显示API状态（紧凑版）
+        render_compact_status()
         
         # 渲染聊天历史
         self.render_chat_history()
@@ -504,6 +518,9 @@ class MindSpriteApp:
         # 渲染宝藏盒（折叠显示历史礼物，避免与当前礼物重复）
         with st.expander("🎁 小念的宝藏盒（点击查看历史礼物）", expanded=False):
             self.render_treasure_box()
+        
+        # 渲染主页面信息面板
+        render_main_info_panel(self.session_manager.session_id)
 
 
 def main():
