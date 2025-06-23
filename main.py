@@ -155,21 +155,39 @@ class MindSpriteApp:
         # 保存AI回应
         self.chat_repo.add_message(session_id, "assistant", full_response)
 
-        # 显示增强版回应
+        # 检查是否为急救包回应
+        is_emergency = parsed_response.get("is_emergency", False)
+        
+        # 显示回应
         with st.chat_message("assistant"):
-            # 显示记忆联想（如果有）
-            if parsed_response["memory_association"]:
-                st.markdown("### 💭 记忆联想")
-                st.info(f"🌟 {parsed_response['memory_association']}")
+            if is_emergency:
+                # 【急救包特殊显示】
+                st.markdown("### 🚨 情绪关怀模式")
+                st.error("小念检测到你需要额外的关怀和支持")
                 st.markdown("---")
-            
-            # 显示情绪共鸣
-            st.markdown("### 💕 情感共鸣")
-            st.markdown(f"🫶 {parsed_response['emotional_resonance']}")
-            st.markdown("---")
-            
-            # 显示主要回应
-            st.markdown(f"💖 {parsed_response['sprite_reaction']}")
+                
+                # 显示情绪共鸣
+                st.markdown("### 💙 深度理解")
+                st.markdown(f"🫂 {parsed_response['emotional_resonance']}")
+                st.markdown("---")
+                
+                # 显示主要回应
+                st.markdown(f"💖 {parsed_response['sprite_reaction']}")
+            else:
+                # 【普通增强版回应】
+                # 显示记忆联想（如果有）
+                if parsed_response["memory_association"]:
+                    st.markdown("### 💭 记忆联想")
+                    st.info(f"🌟 {parsed_response['memory_association']}")
+                    st.markdown("---")
+                
+                # 显示情绪共鸣
+                st.markdown("### 💕 情感共鸣")
+                st.markdown(f"🫶 {parsed_response['emotional_resonance']}")
+                st.markdown("---")
+                
+                # 显示主要回应
+                st.markdown(f"💖 {parsed_response['sprite_reaction']}")
 
         # 处理礼物
         gift_info = {
@@ -184,8 +202,31 @@ class MindSpriteApp:
             )
             
             # 显示礼物
-            st.markdown("### 🎁 小念的礼物")
-            st.success(f"**{gift_info['type']}**\n\n{gift_info['content']}")
+            if is_emergency:
+                st.markdown("### 🆘 情绪急救包")
+                with st.container():
+                    st.error(f"**{gift_info['type']}**")
+                    st.markdown(gift_info['content'])
+                    
+                    # 显示危机资源（如果有）
+                    if parsed_response.get("emergency_data", {}).get("crisis_resources"):
+                        st.markdown("---")
+                        st.markdown("### 📞 紧急联系方式")
+                        crisis_resources = parsed_response["emergency_data"]["crisis_resources"]
+                        for resource_name, contact_info in crisis_resources.items():
+                            if resource_name != "温馨提醒":
+                                st.info(f"**{resource_name}**: {contact_info}")
+                            else:
+                                st.warning(f"💙 {contact_info}")
+                                
+                    # 支持信息
+                    if parsed_response.get("emergency_data", {}).get("support_message"):
+                        st.markdown("---")
+                        support_msg = parsed_response["emergency_data"]["support_message"]
+                        st.info(support_msg)
+            else:
+                st.markdown("### 🎁 小念的礼物")
+                st.success(f"**{gift_info['type']}**\n\n{gift_info['content']}")
 
         # 【v5.1新增】添加经验值和处理升级
         exp_result = self.intimacy_service.add_exp(session_id, exp_to_add=15)  # 记忆联想功能经验值

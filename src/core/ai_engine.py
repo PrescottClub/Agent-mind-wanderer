@@ -13,8 +13,9 @@ from langchain_deepseek import ChatDeepSeek
 from langchain_core.prompts import PromptTemplate
 from pydantic import SecretStr
 
-# 导入搜索服务
+# 导入搜索服务和情绪急救包服务
 from ..services.search_service import LocalMentalHealthSearchService, SearchTriggerDetector
+from ..services.emotion_emergency_service import EmotionEmergencyService
 from ..config.prompts import ENHANCED_MIND_SPRITE_PROMPT, SEARCH_ENHANCED_PROMPT
 
 
@@ -25,6 +26,7 @@ class AIEngine:
         self.api_key = api_key
         self.llm: Optional[ChatDeepSeek] = None
         self.search_service = LocalMentalHealthSearchService(serp_api_key) if serp_api_key else None
+        self.emotion_emergency_service = EmotionEmergencyService()
         self._initialize()
 
     def _initialize(self):
@@ -62,6 +64,11 @@ class AIEngine:
             }
 
         try:
+            # 🚨 第一优先级：检测情绪急救需求
+            emotion_detection = self.emotion_emergency_service.detect_emotion(user_input)
+            if emotion_detection:
+                return self._get_emergency_response(user_input, emotion_detection, chat_history)
+            
             # 检查是否需要搜索
             search_results = None
             if self.search_service:
@@ -253,6 +260,56 @@ class AIEngine:
         except Exception as e:
             st.error(f"搜索回应生成出错: {e}")
             return self._get_fallback_response(user_input)
+
+    def _get_emergency_response(self, user_input: str, emotion_detection, chat_history: List[Tuple[str, str]]) -> Dict:
+        """处理情绪急救包回应"""
+        try:
+            # 使用急救包服务格式化回应
+            emergency_response = self.emotion_emergency_service.format_emergency_response(emotion_detection)
+            
+            # 显示急救包指示器
+            if emotion_detection.is_emergency:
+                st.error("🚨 检测到情绪危机，小念提供紧急支持")
+            else:
+                st.warning(f"💙 检测到{emergency_response['emotion_detected']}({emergency_response['severity']})，小念提供心理急救包")
+            
+            # 构建回应数据
+            response_data = {
+                "mood_category": "关怀",
+                "memory_association": f"小念注意到你现在的{emergency_response['emotion_detected']}情绪",
+                "emotional_resonance": emergency_response["empathy_message"],
+                "sprite_reaction": emergency_response["empathy_message"],
+                "gift_type": "情绪急救包",
+                "gift_content": self._format_emergency_techniques(emergency_response["techniques"]),
+                "is_emergency": emergency_response["is_emergency"],
+                "emergency_data": emergency_response  # 完整的急救包数据
+            }
+            
+            return response_data
+            
+        except Exception as e:
+            st.error(f"情绪急救包处理出错: {e}")
+            return self._get_fallback_response(user_input)
+    
+    def _format_emergency_techniques(self, techniques: List) -> str:
+        """格式化急救技巧为礼物内容"""
+        if not techniques:
+            return "✨ 小念的温暖陪伴与你同在，你并不孤单 ✨"
+        
+        technique = techniques[0]  # 使用第一个技巧
+        formatted = f"🌟 {technique.title}\n\n"
+        formatted += f"📝 {technique.description}\n\n"
+        formatted += "💪 具体步骤：\n"
+        
+        for step in technique.steps:
+            formatted += f"   {step}\n"
+        
+        formatted += f"\n⏰ 建议用时：{technique.duration}"
+        
+        if technique.warning:
+            formatted += f"\n\n⚠️ {technique.warning}"
+        
+        return formatted
 
     def _get_fallback_response(self, user_input: str) -> Dict:
         """降级回应 - 当AI无法正常工作时使用"""
