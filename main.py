@@ -67,8 +67,35 @@ class MindSpriteApp:
         """, unsafe_allow_html=True)
     
     def handle_proactive_greeting(self):
-        """处理主动问候"""
+        """处理主动问候和关怀任务"""
         session_id = self.session_manager.session_id
+        
+        # 【v5.1新增】优先检查关怀任务
+        if self.ai_engine:
+            try:
+                care_tasks = self.ai_engine.get_pending_care_tasks(session_id)
+                if care_tasks and not st.session_state.get('care_task_shown', False):
+                    # 显示第一个关怀任务
+                    care_task = care_tasks[0]
+                    
+                    # 显示关怀消息
+                    with st.chat_message("assistant"):
+                        st.markdown("### 💝 小念想起")
+                        st.info("小念一直记挂着你呢~")
+                        st.markdown(f"💖 {care_task['care_message']}")
+                    
+                    # 保存关怀消息到聊天历史
+                    care_response = f"💝 小念想起: {care_task['care_message']}"
+                    self.chat_repo.add_message(session_id, "assistant", care_response)
+                    
+                    # 标记关怀任务为已完成
+                    self.ai_engine.complete_care_task(care_task['id'])
+                    
+                    # 标记已显示，避免重复
+                    st.session_state.care_task_shown = True
+                    return  # 显示关怀任务后就不显示普通问候了
+            except Exception as e:
+                print(f"关怀任务检查错误: {e}")
         
         # 检查是否需要主动问候
         if (not st.session_state.get('proactive_greeting_shown', False) and 
@@ -249,6 +276,23 @@ class MindSpriteApp:
         # 显示经验值获得提示（小字提示）
         exp_gained = exp_result["exp_gained"]
         st.caption(f"💫 获得 {exp_gained} EXP！（记忆联想奖励）")
+
+        # 【v5.1新增】处理关怀机会检测
+        try:
+            care_tasks = self.ai_engine.process_care_opportunities(user_input, session_id)
+            if care_tasks:
+                # 在debug模式下显示创建的关怀任务
+                for task in care_tasks:
+                    care_type_names = {
+                        "emotion_followup": "情绪跟进",
+                        "event_followup": "事件跟进", 
+                        "regular_care": "定期关怀"
+                    }
+                    type_name = care_type_names.get(task['care_type'], task['care_type'])
+                    st.caption(f"💝 小念已为你安排 {type_name} （{task['scheduled_time'][:16]}）")
+        except Exception as e:
+            # 静默处理关怀任务错误，不影响主流程
+            print(f"关怀任务处理错误: {e}")
 
         # 刷新页面以显示新消息
         st.rerun()

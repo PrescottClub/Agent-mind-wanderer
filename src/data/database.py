@@ -88,6 +88,23 @@ def init_db():
             )
         ''')
 
+        # 【v5.1新增】创建主动关怀调度表 - Agent主动关怀系统
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS scheduled_care (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                care_type TEXT NOT NULL,  -- 'emotion_followup', 'event_followup', 'regular_care'
+                trigger_content TEXT NOT NULL,  -- 触发关怀的原始用户内容
+                care_message TEXT NOT NULL,  -- 关怀消息内容
+                scheduled_time DATETIME NOT NULL,  -- 预定关怀时间
+                status TEXT NOT NULL DEFAULT 'pending',  -- 'pending', 'completed', 'cancelled'
+                priority TEXT NOT NULL DEFAULT 'medium',  -- 'high', 'medium', 'low'
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                executed_at DATETIME NULL,
+                FOREIGN KEY (session_id) REFERENCES chat_history(session_id)
+            )
+        ''')
+
         # 创建索引以提高查询性能
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_session_timestamp
@@ -108,6 +125,12 @@ def init_db():
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_user_profiles_session
             ON user_profiles(session_id)
+        ''')
+
+        # 【v5.1新增】为关怀调度表创建索引
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_scheduled_care_session_time
+            ON scheduled_care(session_id, scheduled_time, status)
         ''')
 
         conn.commit()

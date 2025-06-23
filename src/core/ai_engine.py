@@ -13,9 +13,10 @@ from langchain_deepseek import ChatDeepSeek
 from langchain_core.prompts import PromptTemplate
 from pydantic import SecretStr
 
-# 导入搜索服务和情绪急救包服务
+# 导入搜索服务、情绪急救包服务和关怀调度服务
 from ..services.search_service import LocalMentalHealthSearchService, SearchTriggerDetector
 from ..services.emotion_emergency_service import EmotionEmergencyService
+from ..services.care_scheduler_service import CareSchedulerService
 from ..config.prompts import ENHANCED_MIND_SPRITE_PROMPT, SEARCH_ENHANCED_PROMPT
 
 
@@ -27,6 +28,7 @@ class AIEngine:
         self.llm: Optional[ChatDeepSeek] = None
         self.search_service = LocalMentalHealthSearchService(serp_api_key) if serp_api_key else None
         self.emotion_emergency_service = EmotionEmergencyService()
+        self.care_scheduler_service = CareSchedulerService()
         self._initialize()
 
     def _initialize(self):
@@ -147,6 +149,55 @@ class AIEngine:
         except Exception as e:
             st.error(f"AI分析出错: {e}")
             return self._get_fallback_response(user_input)
+    
+    def process_care_opportunities(self, user_input: str, session_id: str) -> List[Dict]:
+        """
+        处理关怀机会检测并创建关怀任务
+        
+        Args:
+            user_input: 用户输入内容
+            session_id: 会话ID
+            
+        Returns:
+            创建的关怀任务列表
+        """
+        try:
+            # 检测关怀机会
+            care_opportunities = self.care_scheduler_service.detect_care_opportunities(user_input, session_id)
+            
+            created_tasks = []
+            for care_task in care_opportunities:
+                # 保存到数据库
+                success = self.care_scheduler_service.schedule_care_task(care_task)
+                if success:
+                    created_tasks.append(care_task)
+            
+            # 检查是否需要创建定期关怀
+            regular_care_task = self.care_scheduler_service.create_regular_care_task(session_id)
+            if regular_care_task:
+                created_tasks.append(regular_care_task)
+            
+            return created_tasks
+            
+        except Exception as e:
+            print(f"处理关怀机会失败: {e}")
+            return []
+    
+    def get_pending_care_tasks(self, session_id: str) -> List[Dict]:
+        """获取待执行的关怀任务"""
+        try:
+            return self.care_scheduler_service.get_pending_care_tasks(session_id)
+        except Exception as e:
+            print(f"获取关怀任务失败: {e}")
+            return []
+    
+    def complete_care_task(self, task_id: int) -> bool:
+        """完成关怀任务"""
+        try:
+            return self.care_scheduler_service.mark_care_task_completed(task_id)
+        except Exception as e:
+            print(f"完成关怀任务失败: {e}")
+            return False
 
     def _analyze_recent_mood_patterns(self, chat_history: List[Tuple[str, str]]) -> str:
         """分析最近的情绪模式"""
