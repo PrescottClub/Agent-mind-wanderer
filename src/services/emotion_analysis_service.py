@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
+from functools import lru_cache
 from src.data.database import get_db_connection
 
 
@@ -87,6 +88,10 @@ class EmotionAnalysisService:
         """初始化情感分析服务"""
         self.emotion_keywords = self._load_emotion_keywords()
         self.empathy_phrases = self._load_empathy_phrases()
+
+        # 预编译正则表达式模式以提高性能
+        self._compiled_patterns = {}
+        self._compile_emotion_patterns()
         
     def _load_emotion_keywords(self) -> Dict[EmotionType, Dict[str, float]]:
         """加载情绪关键词词典"""
@@ -209,7 +214,43 @@ class EmotionAnalysisService:
                 ]
             }
         }
-    
+
+    def _compile_emotion_patterns(self):
+        """预编译情感关键词的正则表达式模式"""
+        for emotion_type, keywords in self.emotion_keywords.items():
+            # 创建单词边界匹配的正则表达式
+            pattern_parts = []
+            for keyword in keywords.keys():
+                # 转义特殊字符并添加单词边界
+                escaped_keyword = re.escape(keyword)
+                pattern_parts.append(escaped_keyword)
+
+            if pattern_parts:
+                # 使用 | 连接所有关键词，添加单词边界
+                pattern = r'\b(?:' + '|'.join(pattern_parts) + r')\b'
+                self._compiled_patterns[emotion_type] = re.compile(pattern, re.IGNORECASE)
+
+    @lru_cache(maxsize=1000)
+    def _analyze_text_cached(self, text: str) -> tuple:
+        """缓存的文本情感分析（用于重复文本）"""
+        emotion_scores = {}
+        trigger_keywords = []
+
+        for emotion_type, pattern in self._compiled_patterns.items():
+            matches = pattern.findall(text)
+            if matches:
+                # 计算基于匹配和权重的分数
+                score = 0
+                for match in matches:
+                    weight = self.emotion_keywords[emotion_type].get(match.lower(), 1.0)
+                    score += weight
+                    trigger_keywords.append(match)
+                emotion_scores[emotion_type] = score
+            else:
+                emotion_scores[emotion_type] = 0
+
+        return tuple(emotion_scores.items()), tuple(trigger_keywords)
+
     def analyze_emotion(self, text: str, session_id: str, message_id: int) -> EmotionAnalysisResult:
         """
         分析文本的情感内容
@@ -222,17 +263,10 @@ class EmotionAnalysisService:
         Returns:
             EmotionAnalysisResult: 情感分析结果
         """
-        # 1. 关键词匹配和权重计算
-        emotion_scores = {}
-        trigger_keywords = []
-        
-        for emotion_type, keywords in self.emotion_keywords.items():
-            score = 0
-            for keyword, weight in keywords.items():
-                if keyword in text:
-                    score += weight
-                    trigger_keywords.append(keyword)
-            emotion_scores[emotion_type] = score
+        # 1. 使用缓存的关键词匹配和权重计算
+        emotion_items, trigger_keywords_tuple = self._analyze_text_cached(text)
+        emotion_scores = dict(emotion_items)
+        trigger_keywords = list(trigger_keywords_tuple)
         
         # 2. 文本长度和语气强化
         text_length_factor = min(len(text) / 100, 1.5)  # 长文本可能情感更强烈

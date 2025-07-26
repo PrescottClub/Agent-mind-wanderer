@@ -14,6 +14,7 @@ from ..utils.helpers import (
     parse_enhanced_ai_response,
     clean_markdown_text
 )
+from ..utils.validation import input_validator
 
 
 class ChatService:
@@ -86,16 +87,39 @@ class ChatService:
     def process_user_message(self, session_id: str, user_input: str, message_id: int) -> Dict:
         """
         处理用户消息（非流式版本，用于后处理）
-        
+
         Args:
             session_id: 会话ID
             user_input: 用户输入
             message_id: 消息ID
-            
+
         Returns:
             Dict: 处理结果，包含AI回应和相关信息
         """
         try:
+            # 验证会话ID
+            if not input_validator.validate_session_id(session_id):
+                return {
+                    "success": False,
+                    "error": "无效的会话ID"
+                }
+
+            # 验证和清理用户输入
+            validation_result = input_validator.validate_message_input(user_input)
+            if not validation_result['valid']:
+                return {
+                    "success": False,
+                    "error": f"输入验证失败: {', '.join(validation_result['errors'])}"
+                }
+
+            # 使用清理后的输入
+            sanitized_input = validation_result['sanitized_message']
+
+            # 检测潜在威胁
+            threats = input_validator.detect_potential_threats(user_input)
+            if threats:
+                st.warning(f"检测到潜在安全威胁: {', '.join(threats)}")
+                # 记录安全事件但继续处理（使用清理后的输入）
             # 获取上下文信息
             core_memories = self.chat_repo.get_core_memories(session_id, limit=5)
             recent_context = self.chat_repo.get_recent_context(session_id, context_turns=4)
@@ -115,16 +139,16 @@ class ChatService:
             last_interaction_time = datetime.now() - timedelta(hours=1)  # 默认1小时前，实际应从数据库获取
             
             response_data = self.ai_engine.get_heart_catcher_response(
-                user_input=user_input,
+                user_input=sanitized_input,
                 chat_history=recent_context,
                 session_id=session_id,
                 last_interaction_time=last_interaction_time
             )
-            
+
             # 如果心灵捕手失败，降级到情感增强回应
             if not response_data:
                 response_data = self.ai_engine.get_emotion_enhanced_response(
-                    user_input, recent_context, core_memories, intimacy_level, total_interactions,
+                    sanitized_input, recent_context, core_memories, intimacy_level, total_interactions,
                     message_id, session_id
                 )
             
@@ -161,7 +185,7 @@ class ChatService:
             # 处理关怀机会检测
             care_tasks = []
             try:
-                care_tasks = self.ai_engine.process_care_opportunities(user_input, session_id)
+                care_tasks = self.ai_engine.process_care_opportunities(sanitized_input, session_id)
             except Exception as e:
                 print(f"关怀任务处理错误: {e}")
             
@@ -340,3 +364,45 @@ class ChatService:
                 else:
                     time_display = str(scheduled_time)
                 st.caption(f"💝 小念已为你安排 {type_name} （{time_display}）")
+
+    def stream_ai_response(self, session_id: str, user_input: str, interaction_count: int) -> Generator[str, None, None]:
+        """
+        流式AI响应生成器 - 为测试兼容性提供的方法
+
+        Args:
+            session_id: 会话ID
+            user_input: 用户输入
+            interaction_count: 交互次数
+
+        Yields:
+            str: AI响应的文本块
+        """
+        try:
+            # 输入验证
+            validation_result = input_validator.validate_message_input(user_input)
+            if not validation_result["valid"]:
+                yield "💖 小念发现你的消息有些特殊，让我们换个话题聊聊吧~"
+                return
+
+            # 获取完整响应
+            result = self.process_user_message(session_id, user_input, interaction_count)
+
+            if not result["success"]:
+                yield "💖 小念遇到了一些技术问题，但还是想陪伴你~ 让我们稍后再试试吧。"
+                return
+
+            # 提取AI回应文本
+            parsed_response = result.get("parsed_response", {})
+            sprite_reaction = parsed_response.get("sprite_reaction", "")
+
+            if sprite_reaction:
+                # 模拟流式输出 - 按句子分割
+                sentences = sprite_reaction.split('。')
+                for sentence in sentences:
+                    if sentence.strip():
+                        yield sentence.strip() + '。'
+            else:
+                yield "💖 小念想和你聊天，但现在有点害羞呢~"
+
+        except Exception as e:
+            yield f"💖 小念遇到了一些技术问题，但还是想陪伴你~ 错误信息: {str(e)}"

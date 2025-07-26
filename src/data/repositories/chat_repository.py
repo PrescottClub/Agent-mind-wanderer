@@ -15,21 +15,17 @@ class ChatRepository(BaseRepository):
     def add_message(self, session_id: str, role: str, content: str) -> Optional[int]:
         """添加聊天消息，返回消息ID"""
         try:
-            conn = self.get_connection()
-            if not conn:
-                return None
-            
-            cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO chat_history (session_id, role, content, timestamp)
-                VALUES (?, ?, ?, ?)
-            ''', (session_id, role, content, datetime.now()))
-            
-            message_id = cursor.lastrowid
-            conn.commit()
-            conn.close()
-            return message_id
-            
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT INTO chat_history (session_id, role, content, timestamp)
+                    VALUES (?, ?, ?, ?)
+                ''', (session_id, role, content, datetime.now()))
+
+                message_id = cursor.lastrowid
+                conn.commit()
+                return message_id
+
         except Exception as e:
             print(f"添加消息失败: {e}")
             return None
@@ -49,7 +45,27 @@ class ChatRepository(BaseRepository):
             # 返回按时间正序排列的历史记录
             return [(role, content, timestamp) for role, content, timestamp in reversed(results)]
         return []
-    
+
+    def get_history_paginated(self, session_id: str, limit: int = 20, offset: int = 0) -> List[Tuple[str, str, str]]:
+        """获取分页聊天历史"""
+        query = '''
+            SELECT role, content, timestamp FROM chat_history
+            WHERE session_id = ?
+            ORDER BY timestamp DESC
+            LIMIT ? OFFSET ?
+        '''
+        results = self.execute_query(query, (session_id, limit, offset))
+        if results:
+            # 返回按时间正序排列的历史记录
+            return [(role, content, timestamp) for role, content, timestamp in reversed(results)]
+        return []
+
+    def get_message_count(self, session_id: str) -> int:
+        """获取会话的消息总数"""
+        query = 'SELECT COUNT(*) FROM chat_history WHERE session_id = ?'
+        results = self.execute_query(query, (session_id,))
+        return results[0][0] if results else 0
+
     def get_recent_context(self, session_id: str, context_turns: int = 6) -> List[Tuple[str, str]]:
         """获取最近的对话上下文用于AI"""
         query = '''

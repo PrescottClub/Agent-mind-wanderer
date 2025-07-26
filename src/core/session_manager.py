@@ -7,6 +7,8 @@ import streamlit as st
 import uuid
 from datetime import datetime
 from typing import Optional
+from .security import security_manager
+from ..utils.validation import input_validator
 
 
 class SessionManager:
@@ -21,13 +23,14 @@ class SessionManager:
         # 首先尝试从URL参数获取
         if 'session_id' in st.query_params:
             session_id = st.query_params['session_id']
-            if session_id:
+            if session_id and input_validator.validate_session_id(session_id):
                 return session_id
-        
+
         # 然后尝试从session state获取
         if hasattr(st.session_state, 'session_id') and st.session_state.session_id:
-            return st.session_state.session_id
-        
+            if input_validator.validate_session_id(st.session_state.session_id):
+                return st.session_state.session_id
+
         # 最后生成新的会话ID
         new_session_id = str(uuid.uuid4())
         st.session_state.session_id = new_session_id
@@ -98,16 +101,47 @@ class SessionManager:
     
     def is_api_key_configured(self) -> bool:
         """检查API密钥是否已配置"""
-        return (hasattr(st.session_state, 'deepseek_api_key') and 
-                st.session_state.deepseek_api_key and 
-                st.session_state.deepseek_api_key.strip())
+        # 检查加密的API密钥
+        encrypted_key = st.session_state.get('encrypted_deepseek_api_key')
+        if encrypted_key:
+            decrypted_key = security_manager.decrypt_api_key(encrypted_key)
+            return bool(decrypted_key and decrypted_key.strip())
+
+        # 兼容旧版本的明文密钥
+        old_key = st.session_state.get('deepseek_api_key')
+        return bool(old_key and old_key.strip())
     
-    def set_api_key(self, api_key: str):
-        """设置API密钥"""
-        st.session_state.deepseek_api_key = api_key.strip()
-    
+    def set_api_key(self, api_key: str) -> bool:
+        """设置加密的API密钥"""
+        if not api_key or not api_key.strip():
+            return False
+
+        # 验证API密钥格式
+        if not security_manager.validate_api_key_format(api_key.strip()):
+            return False
+
+        # 加密并存储API密钥
+        encrypted_key = security_manager.encrypt_api_key(api_key.strip())
+        if encrypted_key:
+            st.session_state.encrypted_deepseek_api_key = encrypted_key
+            # 清除旧的明文密钥（如果存在）
+            if 'deepseek_api_key' in st.session_state:
+                del st.session_state.deepseek_api_key
+            return True
+        return False
+
     def get_api_key(self) -> Optional[str]:
-        """获取API密钥"""
-        if self.is_api_key_configured():
-            return st.session_state.deepseek_api_key
+        """获取解密的API密钥"""
+        encrypted_key = st.session_state.get('encrypted_deepseek_api_key')
+        if encrypted_key:
+            return security_manager.decrypt_api_key(encrypted_key)
+
+        # 兼容旧版本的明文密钥
+        old_key = st.session_state.get('deepseek_api_key')
+        if old_key:
+            # 迁移到加密存储
+            if self.set_api_key(old_key):
+                del st.session_state.deepseek_api_key
+                return old_key
+
         return None

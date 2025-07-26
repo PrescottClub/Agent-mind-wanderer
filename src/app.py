@@ -11,6 +11,8 @@ from typing import Optional
 
 # 导入重构后的模块
 from .data.database import init_db
+from .config.validator import validate_startup_config
+from .utils.logging_config import get_logger
 from .data.repositories.chat_repository import ChatRepository
 from .data.repositories.user_profile_repository import UserProfileRepository
 from .services.intimacy_service import IntimacyService
@@ -34,6 +36,14 @@ class MindSpriteApp:
     """心绪精灵主应用类 - 重构版"""
     
     def __init__(self):
+        # 初始化日志
+        self.logger = get_logger('app')
+
+        # 验证配置
+        if not validate_startup_config():
+            st.error("❌ 配置验证失败，请检查环境变量设置")
+            st.stop()
+
         self.session_manager = SessionManager()
         self.chat_repo = ChatRepository()
         self.user_profile_repo = UserProfileRepository()

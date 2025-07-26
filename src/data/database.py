@@ -7,10 +7,16 @@ import sqlite3
 import os
 from datetime import datetime
 import streamlit as st
+from .connection_pool import get_connection_pool
 
 
 def get_db_connection():
-    """获取数据库连接对象"""
+    """获取数据库连接对象（使用连接池）"""
+    return get_connection_pool().get_connection()
+
+
+def get_db_connection_direct():
+    """获取直接数据库连接（不使用连接池，仅用于初始化）"""
     try:
         conn = sqlite3.connect('mind_sprite.db')
         return conn
@@ -22,10 +28,11 @@ def get_db_connection():
 def init_db():
     """初始化SQLite数据库和表结构"""
     try:
-        conn = get_db_connection()
+        # Use direct connection for initialization to avoid pool issues
+        conn = get_db_connection_direct()
         if not conn:
             return False
-            
+
         cursor = conn.cursor()
 
         # 创建聊天历史表
@@ -161,6 +168,19 @@ def init_db():
             )
         ''')
 
+        # 创建搜索缓存表
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS search_cache (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cache_key TEXT UNIQUE NOT NULL,
+                query TEXT NOT NULL,
+                location TEXT NOT NULL,
+                results TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                expires_at DATETIME NOT NULL
+            )
+        ''')
+
         # 创建索引以提高查询性能
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_session_timestamp
@@ -210,6 +230,17 @@ def init_db():
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_empathy_responses_session_type
             ON empathy_responses(session_id, empathy_type, created_at)
+        ''')
+
+        # 为搜索缓存表创建索引
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_search_cache_key_expires
+            ON search_cache(cache_key, expires_at)
+        ''')
+
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_search_cache_location_expires
+            ON search_cache(location, expires_at)
         ''')
 
         conn.commit()

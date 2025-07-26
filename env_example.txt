@@ -1,20 +1,55 @@
-# 心绪精灵 环境变量配置示例
+# Mind Sprite AI Agent - 环境变量配置模板
 # 复制此文件为 .env 并填入你的API密钥
 
+# ================================
+# 必需配置 (REQUIRED)
+# ================================
+
 # DeepSeek API 配置（必需）
-DEEPSEEK_API_KEY=your_deepseek_api_key_here
+# 获取API密钥：https://platform.deepseek.com/
+DEEPSEEK_API_KEY=sk-your-deepseek-api-key-here
 # 模型选择：deepseek-chat(V3,快速) 或 deepseek-reasoner(R1,推理强但慢)
 DEEPSEEK_MODEL=deepseek-chat
 DEEPSEEK_API_BASE=https://api.deepseek.com
 
+# ================================
+# 可选配置 (OPTIONAL)
+# ================================
+
 # SerpApi 配置（可选 - 启用本地心理健康资源搜索）
 # 获取免费密钥：https://serpapi.com/
-# 免费额度：100次搜索/月
-# 付费计划：$50/月5000次搜索
-SERPAPI_API_KEY=your_serpapi_key_here
+# 免费额度：100次搜索/月，付费计划：$50/月5000次搜索
+SERPAPI_API_KEY=your-serpapi-key-for-search
 
-# 应用配置
-DEBUG_MODE=false
-# 性能优化配置（数值越小速度越快）
+# AI响应设置
 MAX_TOKENS=512
 TEMPERATURE=0.5
+
+# 应用设置
+DEBUG_MODE=false
+LOG_LEVEL=INFO
+DATABASE_PATH=mind_sprite.db
+CACHE_DURATION_HOURS=24
+
+# ================================
+# 功能开关 (FEATURE FLAGS)
+# ================================
+
+# 启用/禁用功能
+ENABLE_SEARCH_FEATURE=true
+ENABLE_EMOTION_ANALYSIS=true
+ENABLE_PROACTIVE_CARE=true
+ENABLE_MEMORY_SYSTEM=true
+ENABLE_INTIMACY_TRACKING=true
+
+# ================================
+# 安全设置 (SECURITY)
+# ================================
+
+# 会话安全
+SESSION_TIMEOUT_HOURS=24
+MAX_LOGIN_ATTEMPTS=5
+
+# 性能设置
+REQUEST_TIMEOUT_SECONDS=30
+MAX_CONCURRENT_REQUESTS=10

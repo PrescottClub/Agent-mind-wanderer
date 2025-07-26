@@ -8,8 +8,10 @@ import streamlit as st
 
 def render_api_config():
     """渲染API配置浮动面板"""
-    # 检查API密钥状态
-    api_configured = bool(st.session_state.get('deepseek_api_key'))
+    # 检查API密钥状态 - 使用会话管理器
+    from ...core.session_manager import SessionManager
+    session_manager = SessionManager()
+    api_configured = session_manager.is_api_key_configured()
     
     # 浮动配置面板样式
     st.markdown("""
@@ -98,8 +100,15 @@ def render_api_config():
                 )
                 
                 if user_api_key and user_api_key.strip():
-                    st.session_state.deepseek_api_key = user_api_key.strip()
-                    st.rerun()
+                    # 使用会话管理器的安全API密钥设置
+                    from ...core.session_manager import SessionManager
+                    session_manager = SessionManager()
+
+                    if session_manager.set_api_key(user_api_key.strip()):
+                        st.success("✅ API密钥已安全保存")
+                        st.rerun()
+                    else:
+                        st.error("❌ API密钥格式无效，请检查后重试")
             
             st.markdown("""
                 <div style="margin-top: 10px; text-align: center;">
@@ -115,7 +124,9 @@ def render_api_config():
 
 def render_compact_status():
     """渲染紧凑状态显示 - 用于主页面顶部"""
-    api_configured = bool(st.session_state.get('deepseek_api_key'))
+    from ...core.session_manager import SessionManager
+    session_manager = SessionManager()
+    api_configured = session_manager.is_api_key_configured()
     
     if api_configured:
         st.success("🔑 API已配置 - 小念随时待命！")

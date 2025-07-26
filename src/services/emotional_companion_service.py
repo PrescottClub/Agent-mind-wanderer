@@ -10,6 +10,8 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from enum import Enum
 from dataclasses import dataclass
+from ..config.companion_config import get_config
+from ..utils.logging_config import get_logger, monitor_performance
 
 
 class CompanionMood(Enum):
@@ -50,22 +52,24 @@ class EmotionalCompanionService:
     """情感陪伴服务类 - 专业情绪价值提供者"""
     
     def __init__(self):
+        self.config = get_config()
+        self.logger = get_logger('emotional_companion')
         self._init_personality_traits()
         self._init_response_templates()
         self._init_clinginess_patterns()
         
     def _init_personality_traits(self):
         """初始化小念的性格特征"""
+        # 从配置获取性格参数
         self.personality = {
-            # 基础性格参数 (0-10)
-            "sweetness": 9,        # 甜腻度
-            "playfulness": 8,      # 俏皮度  
-            "sensitivity": 9,      # 敏感度
-            "clingy_tendency": 7,  # 粘人倾向
-            "emotional_sync": 9,   # 情绪同步能力
-            "care_intensity": 10,  # 关怀强度
-            "possessiveness": 6,   # 占有欲（适度）
-            "vulnerability": 7,    # 示弱程度
+            "sweetness": self.config.personality.sweetness,
+            "playfulness": self.config.personality.playfulness,
+            "sensitivity": self.config.personality.sensitivity,
+            "clingy_tendency": self.config.personality.clingy_tendency,
+            "emotional_sync": self.config.personality.emotional_sync,
+            "care_intensity": self.config.personality.care_intensity,
+            "possessiveness": self.config.personality.possessiveness,
+            "vulnerability": self.config.personality.vulnerability
         }
         
         # 语言风格参数
@@ -153,7 +157,8 @@ class EmotionalCompanionService:
             }
         }
     
-    def analyze_user_emotional_state(self, user_input: str, session_history: List, 
+    @monitor_performance("emotional_state_analysis")
+    def analyze_user_emotional_state(self, user_input: str, session_history: List,
                                    last_interaction_time: datetime) -> EmotionalState:
         """分析用户情感状态"""
         # 计算距离上次互动的时间

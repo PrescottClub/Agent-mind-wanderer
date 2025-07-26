@@ -1,13 +1,19 @@
 """
 搜索服务模块
 实现本地心理健康资源搜索功能
+增强版本：包含错误处理、缓存机制和性能优化
 """
 
 import os
 import re
+import time
+import requests
+import json
 from typing import Dict, List, Optional
+from datetime import datetime, timedelta
 from langchain_community.utilities import SerpAPIWrapper
 import streamlit as st
+from functools import lru_cache
 
 
 class LocalMentalHealthSearchService:

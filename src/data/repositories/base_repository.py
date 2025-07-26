@@ -23,16 +23,12 @@ class BaseRepository:
     def execute_query(self, query: str, params: tuple = ()) -> Optional[List[Tuple]]:
         """执行查询并返回结果"""
         try:
-            conn = self.get_connection()
-            if not conn:
-                return None
-                
-            cursor = conn.cursor()
-            cursor.execute(query, params)
-            results = cursor.fetchall()
-            conn.close()
-            return results
-            
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, params)
+                results = cursor.fetchall()
+                return results
+
         except Exception as e:
             st.error(f"查询执行失败: {e}")
             return None
@@ -40,16 +36,12 @@ class BaseRepository:
     def execute_insert(self, query: str, params: tuple = ()) -> bool:
         """执行插入操作"""
         try:
-            conn = self.get_connection()
-            if not conn:
-                return False
-                
-            cursor = conn.cursor()
-            cursor.execute(query, params)
-            conn.commit()
-            conn.close()
-            return True
-            
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, params)
+                conn.commit()
+                return True
+
         except Exception as e:
             st.error(f"插入操作失败: {e}")
             return False
@@ -57,16 +49,12 @@ class BaseRepository:
     def execute_update(self, query: str, params: tuple = ()) -> bool:
         """执行更新操作"""
         try:
-            conn = self.get_connection()
-            if not conn:
-                return False
-                
-            cursor = conn.cursor()
-            cursor.execute(query, params)
-            conn.commit()
-            conn.close()
-            return True
-            
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, params)
+                conn.commit()
+                return True
+
         except Exception as e:
             st.error(f"更新操作失败: {e}")
             return False
@@ -74,16 +62,12 @@ class BaseRepository:
     def execute_delete(self, query: str, params: tuple = ()) -> bool:
         """执行删除操作"""
         try:
-            conn = self.get_connection()
-            if not conn:
-                return False
-                
-            cursor = conn.cursor()
-            cursor.execute(query, params)
-            conn.commit()
-            conn.close()
-            return True
-            
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, params)
+                conn.commit()
+                return True
+
         except Exception as e:
             st.error(f"删除操作失败: {e}")
             return False

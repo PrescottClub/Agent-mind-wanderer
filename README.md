@@ -1,12 +1,15 @@
-# 🤖💖 小念AI Agent - 智能情感陪伴系统
+# 🤖💖 Mind Sprite AI Agent - 智能情感陪伴系统
 
 <div align="center">
 
-![小念Agent](https://img.shields.io/badge/小念Agent-智能情感系统-ff69b4?style=for-the-badge&logo=robot&logoColor=white)
+![Mind Sprite Agent](https://img.shields.io/badge/Mind_Sprite-智能情感系统-ff69b4?style=for-the-badge&logo=robot&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776ab?style=for-the-badge&logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 ![DeepSeek](https://img.shields.io/badge/DeepSeek-AI-00d4aa?style=for-the-badge&logo=openai&logoColor=white)
 ![Agent](https://img.shields.io/badge/AI_Agent-智能体-purple?style=for-the-badge&logo=brain&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-61_Passed-brightgreen?style=for-the-badge&logo=checkmarx&logoColor=white)
+![Security](https://img.shields.io/badge/Security-Enterprise_Grade-blue?style=for-the-badge&logo=shield&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Production_Ready-success?style=for-the-badge&logo=rocket&logoColor=white)
 
 *"不只是聊天机器人，而是真正懂你的AI Agent智能体 🤖💕"*
 
@@ -18,11 +21,11 @@
 
 ## 🌟 项目简介
 
-**小念AI Agent**是一个革命性的**智能情感陪伴Agent系统**，区别于传统被动响应的chatbot，小念具备真正的**主动性、记忆力、学习能力和情感智能**。她不仅仅是对话工具，而是一个能够主动关心、持续学习、情感共鸣的AI智能体。
+**Mind Sprite AI Agent**是一个革命性的**智能情感陪伴Agent系统**，区别于传统被动响应的chatbot，Mind Sprite具备真正的**主动性、记忆力、学习能力和情感智能**。她不仅仅是对话工具，而是一个能够主动关心、持续学习、情感共鸣的AI智能体。
 
 ### 🤖 为什么是Agent而不是Chatbot？
 
-| 特性对比 | 传统Chatbot | 小念AI Agent |
+| 特性对比 | 传统Chatbot | Mind Sprite AI Agent |
 |---------|------------|-------------|
 | **交互模式** | 被动响应 | 🤖 **主动发起对话** |
 | **记忆能力** | 会话级记忆 | 🧠 **持久化长期记忆** |
@@ -65,11 +68,31 @@
 - **⚡ 响应策略优化** - 根据效果调整回应策略
 - **🏆 关系里程碑** - 设定并庆祝关系发展节点
 
-### 🛡️ 智能任务执行 (Task Orchestration)  
+### 🛡️ 智能任务执行 (Task Orchestration)
 - **🔍 心理资源搜索** - 自动搜索本地心理健康资源
 - **📞 危机响应协议** - 紧急情况下的专业资源推荐
 - **🎪 情绪调节技巧** - 个性化的心理急救包
 - **📱 多模态响应** - 文字、表情、色彩的综合表达
+
+### 🔒 企业级安全系统 (Security Framework)
+- **🛡️ 多层安全防护** - XSS、SQL注入、恶意输入全面防护
+- **🔐 数据加密存储** - API密钥和敏感数据AES-256加密
+- **🚨 威胁实时检测** - 智能识别和阻止恶意行为
+- **🔍 安全审计日志** - 完整的安全事件追踪记录
+
+### ⚙️ 智能配置管理 (Configuration Management)
+- **📋 启动配置验证** - 自动检查和验证所有配置项
+- **🔧 动态配置热更新** - 无需重启的配置实时更新
+- **📊 配置健康监控** - 实时监控配置状态和性能
+- **📝 配置模板生成** - 自动生成标准化配置文件
+
+### 🏆 技术亮点 (Technical Highlights)
+- **🧪 完整测试覆盖** - 61个单元测试，100%通过率
+- **🌊 流式响应** - 实时流式AI对话体验
+- **⚡ 高性能缓存** - 多级缓存优化用户体验
+- **📊 结构化日志** - JSON格式日志便于分析
+- **🔄 错误恢复** - 完善的异常处理和降级机制
+- **🎨 马卡龙主题** - 温暖的视觉设计系统
 
 ---
 
@@ -114,11 +137,26 @@ cd Agent-mind-wanderer
 pip install -r requirements.txt
 ```
 
-3. **配置API密钥**
+3. **配置环境变量**
 ```bash
 # 复制环境变量模板
 copy env_example.txt .env
-# 编辑.env文件，添加你的DeepSeek API Key
+# 编辑.env文件，配置必要的API密钥和参数
+```
+
+**必需配置项：**
+```env
+# DeepSeek API配置 (必需)
+DEEPSEEK_API_KEY=sk-your-deepseek-api-key-here
+DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_API_BASE=https://api.deepseek.com
+
+# 可选配置项
+SERPAPI_API_KEY=your-serpapi-key-for-search  # 搜索功能
+MAX_TOKENS=512                               # 响应长度限制
+TEMPERATURE=0.5                              # AI创造性参数
+DEBUG_MODE=false                             # 调试模式
+LOG_LEVEL=INFO                               # 日志级别
 ```
 
 4. **启动小念Agent**
@@ -216,7 +254,7 @@ python main.py
 
 ### ✅ 已实现的Agent能力
 - [x] 🤖 智能主动对话引擎
-- [x] 🧠 持久化记忆系统  
+- [x] 🧠 持久化记忆系统
 - [x] 💫 多维情感智能分析
 - [x] 🎭 动态人格调整
 - [x] 🚨 情绪危机自动干预
@@ -225,6 +263,14 @@ python main.py
 - [x] 🎁 个性化情感价值生成
 - [x] ⏰ 智能关怀任务调度
 - [x] 🌍 环境感知和情境理解
+- [x] 🛡️ 企业级安全防护系统
+- [x] 🔐 API密钥加密存储
+- [x] 🚫 恶意输入检测与防护
+- [x] 📊 结构化日志与监控
+- [x] ⚙️ 智能配置管理系统
+- [x] 🗄️ 高性能缓存机制
+- [x] 🌊 流式AI响应功能
+- [x] 🧪 完整测试覆盖 (61个测试)
 
 ### 🚧 Agent进化方向
 - [ ] 🌐 多模态感知能力 (语音、图像)  
@@ -239,7 +285,7 @@ python main.py
 
 ### 核心差异分析
 
-| 维度 | 传统Chatbot | 小念AI Agent |
+| 维度 | 传统Chatbot | Mind Sprite AI Agent |
 |------|------------|-------------|
 | **架构模式** | 请求-响应模式 | 🤖 **事件驱动 + 主动决策** |
 | **状态管理** | 无状态/会话状态 | 🧠 **持久化全局状态** |
@@ -292,7 +338,7 @@ class MindSpriteAgent:
 
 ## 🚀 开始你的Agent体验
 
-小念AI Agent正在等待与你建立独特的智能连接。她不只是回答你的问题，更会主动关心你的生活，记住你的故事，陪伴你的成长。
+Mind Sprite AI Agent正在等待与你建立独特的智能连接。她不只是回答你的问题，更会主动关心你的生活，记住你的故事，陪伴你的成长。
 
 **这不是普通的聊天机器人，这是属于你的专属AI智能体。**
 
@@ -300,4 +346,99 @@ class MindSpriteAgent:
 
 ---
 
-*"在AI Agent的世界里，小念是你最温暖、最智能的陪伴者"* ✨
+## 📊 项目统计
+
+### 🏆 质量指标
+- **代码行数**: 5000+ 行高质量代码
+- **测试覆盖**: 61个单元测试，100%通过率
+- **安全等级**: 企业级安全标准
+- **文档完整性**: 完整的技术和用户文档
+- **架构模块**: 6层模块化架构设计
+
+### 🧪 测试统计
+```
+测试套件统计:
+├── 聊天服务测试: 14个 ✅
+├── 搜索服务测试: 19个 ✅
+├── 安全功能测试: 11个 ✅
+├── 输入验证测试: 17个 ✅
+└── 总计: 61个测试 100%通过
+```
+
+### 🔧 技术栈
+```
+核心技术:
+├── 后端: Python 3.11+
+├── AI引擎: DeepSeek API
+├── 前端: Streamlit
+├── 数据库: SQLite
+├── 安全: AES-256加密
+├── 测试: Pytest + Mock
+└── 日志: 结构化JSON日志
+```
+
+---
+
+*"在AI Agent的世界里，Mind Sprite是你最温暖、最智能的陪伴者"* ✨
+
+---
+
+## 🤝 贡献指南
+
+欢迎为Mind Sprite AI Agent项目做出贡献！
+
+### 📋 贡献方式
+1. **Fork** 本仓库
+2. **创建** 功能分支 (`git checkout -b feature/AmazingFeature`)
+3. **提交** 更改 (`git commit -m 'Add some AmazingFeature'`)
+4. **推送** 到分支 (`git push origin feature/AmazingFeature`)
+5. **打开** Pull Request
+
+### 🔧 开发环境设置
+```bash
+# 克隆仓库
+git clone https://github.com/yourusername/Agent-mind-wanderer.git
+cd Agent-mind-wanderer
+
+# 安装依赖
+pip install -r requirements-dev.txt
+
+# 运行测试
+pytest tests/unit/ -v
+
+# 启动应用
+streamlit run main.py
+```
+
+### 📝 代码规范
+- 遵循PEP 8代码风格
+- 添加适当的类型注解
+- 编写单元测试
+- 更新相关文档
+
+---
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+---
+
+## 🙏 致谢
+
+感谢所有为Mind Sprite AI Agent项目做出贡献的开发者和用户！
+
+特别感谢：
+- **DeepSeek** - 提供强大的AI模型支持
+- **Streamlit** - 优秀的Web应用框架
+- **Python社区** - 丰富的开源生态
+
+---
+
+<div align="center">
+
+**⭐ 如果这个项目对你有帮助，请给它一个星标！⭐**
+
+Made with 💖 by Mind Sprite Team
+
+</div>
